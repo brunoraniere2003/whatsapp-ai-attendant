@@ -5,6 +5,7 @@ from conftest import read_log
 from whatsapp_attendant.config import WhatsAppSettings
 from whatsapp_attendant.logs import setup_logging
 from whatsapp_attendant.whatsapp import (
+    MAX_TEXT_CHARS,
     CloudApiSender,
     RecordingSender,
     SendError,
@@ -130,3 +131,40 @@ def test_recording_sender_and_default_client():
     rec.send_text("1", "oi")
     assert rec.sent == [("1", "oi")]
     assert isinstance(CloudApiSender("t", "p").client, httpx.Client)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"entry": {"a": 1}},
+        {"entry": ["x", None, 3]},
+        {"entry": [{"changes": {"value": 1}}]},
+        {"entry": [{"changes": [{"value": []}, "y", {"value": {"messages": "z"}}]}]},
+        event({"from": "1", "id": "x", "type": "text", "text": "oi"}),
+        event({"from": "1", "id": "x", "type": "text", "text": {"body": ["oi"]}}),
+        event({"from": 1, "id": "x", "type": "text", "text": {"body": "oi"}}),
+        event({"from": "1", "id": {"a": 1}, "type": "text", "text": {"body": "oi"}}),
+        event({"from": "1", "id": "x", "type": "button", "button": {"text": 7}}),
+    ],
+)
+def test_ca_15_parse_skips_malformed_parts(payload):
+    assert parse_messages(payload) == []
+
+
+def test_ca_15_parse_keeps_good_messages_next_to_bad_ones_and_caps_long_text():
+    payload = event(
+        {"from": "1", "id": "bad", "type": "text", "text": "oi"},
+        text("1", "good", "x" * 10_000),
+        {"from": "1", "id": "odd", "type": "interactive", "interactive": {"type": "nfm_reply"}},
+    )
+    found = parse_messages(payload)
+    assert [(m.message_id, m.kind) for m in found] == [("good", "text"), ("odd", "interactive")]
+    assert len(found[0].text) == MAX_TEXT_CHARS
+
+
+def test_ca_15_signature_check_survives_non_ascii_and_ignores_hex_case():
+    body = b'{"a":1}'
+    good = signature_for("app-secret", body)
+    assert not verify_signature("app-secret", body, "sha256=\xe9")
+    assert verify_signature("app-secret", body, good.upper().replace("SHA256=", "sha256="))
+    assert not verify_signature("app-secret", body, "  ")

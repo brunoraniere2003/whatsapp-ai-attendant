@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
@@ -43,8 +43,9 @@ class LLMSettings(_Strict):
     effort: Literal["low", "medium", "high"] = "low"
     min_confidence: float = Field(0.6, ge=0.0, le=1.0)
     max_tokens: int = Field(1024, ge=64, le=8192)
-    timeout_seconds: float = Field(10.0, gt=0.0, le=60.0)
-    max_retries: int = Field(2, ge=0, le=5)
+    # Inline budget: the call runs while the webhook request waits (RQ-34, ADR-006).
+    timeout_seconds: float = Field(3.0, gt=0.0, le=5.0)
+    max_retries: int = Field(1, ge=0, le=1)
     server_fallbacks: bool = True
 
 
@@ -55,6 +56,12 @@ class WhatsAppSettings(_Strict):
     send_backoff_seconds: float = Field(0.5, ge=0.0, le=10.0)
     idempotency_ttl_seconds: int = Field(86_400, ge=60, le=7 * 86_400)
     idempotency_max_ids: int = Field(50_000, ge=100, le=5_000_000)
+    # Failed attempts before a message is dead-lettered instead of redelivered (RQ-5).
+    max_processing_attempts: int = Field(3, ge=1, le=10)
+    # Largest webhook body read; larger ones get 413 before the signature check (RQ-33).
+    max_body_bytes: int = Field(1_048_576, ge=1024, le=10_485_760)
+    # Accept events without X-Hub-Signature-256 when no app secret is set. Local tests only.
+    allow_unsigned: bool = False
 
 
 class LoggingSettings(_Strict):
@@ -114,11 +121,11 @@ def load_settings(path: str | Path | None = None) -> Settings:
 class Secrets:
     """Credentials read only from the environment, never from the config file."""
 
-    verify_token: str | None = None
-    access_token: str | None = None
-    phone_number_id: str | None = None
-    app_secret: str | None = None
-    llm_api_key: str | None = None
+    verify_token: str | None = field(default=None, repr=False)
+    access_token: str | None = field(default=None, repr=False)
+    phone_number_id: str | None = field(default=None, repr=False)
+    app_secret: str | None = field(default=None, repr=False)
+    llm_api_key: str | None = field(default=None, repr=False)
 
     @classmethod
     def from_env(cls, env: dict[str, str] | None = None) -> Secrets:

@@ -5,6 +5,7 @@ One file per known incident. Every runbook has the same sections: Symptom, Detec
 | Runbook | When to open it |
 |---|---|
 | [service-unhealthy.md](service-unhealthy.md) | the service does not start, or `/health` answers 503 |
-| [webhook-rejected.md](webhook-rejected.md) | Meta cannot verify the webhook, or events get 401 |
+| [webhook-rejected.md](webhook-rejected.md) | Meta cannot verify the webhook, or events get 401, 413 or 503 |
+| [processing-errors.md](processing-errors.md) | events get 500, `processing_errors` or `dead_letters` grow |
 | [send-failures.md](send-failures.md) | `send_failures` grows or customers get no reply |
 | [misunderstood-spike.md](misunderstood-spike.md) | `not_understood` or handoffs after failures grow faster than traffic |

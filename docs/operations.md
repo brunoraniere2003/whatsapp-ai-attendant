@@ -35,10 +35,11 @@ R: responsible, A: accountable, C: consulted, I: informed.
 | R1 | Confident wrong answer (21% of simulated conversations) | high | medium | handoff on request, weekly learning queue review, next experiment with a confirmation question | developer |
 | R2 | Restart loses sessions and processed ids, a redelivered event gets a second reply | medium | low | single replica; Redis in production (ADR-003) | operator |
 | R3 | Access token expires and replies stop | medium | high | system user token, `send.failed` alert, runbook send-failures | operator |
-| R4 | Forged webhook calls | medium | medium | HMAC check with the app secret, `invalid_signatures` alert | operator |
-| R5 | Personal data in logs | low | high | phones masked in logs and learning queue, message text not logged | developer |
+| R4 | Forged webhook calls | medium | medium | HMAC check with the app secret, 503 without it, 413 above 1 MiB, `invalid_signatures` alert | operator |
+| R5 | Personal data in logs | low | high | phones masked in logs and learning queue, message ids logged only as a keyed hash (a `wamid` encodes the phone), message text not logged | developer |
 | R6 | LLM provider outage or refusal | low | low | local result kept, `llm.error` logged, the layer is optional | developer |
 | R7 | Knowledge base edit breaks an intent | medium | medium | strict validation, tests, evidence regenerated in CI | curator |
+| R8 | A failing dependency or bug loses customer messages | medium | high | ids marked only after success, 500 so Meta redelivers, dead letter after 3 attempts with an alert, runbook processing-errors | developer |
 
 ## Roadmap
 

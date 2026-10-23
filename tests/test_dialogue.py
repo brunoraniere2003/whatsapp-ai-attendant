@@ -1,3 +1,6 @@
+import threading
+import time
+
 from whatsapp_attendant.backends import ORDER_STATUSES, FakeOrderBackend
 from whatsapp_attendant.config import DialogueSettings
 from whatsapp_attendant.dialogue import Action, Attendant, HandoffReason
@@ -110,3 +113,32 @@ def test_masking_keeps_the_number_out_of_classification(attendant, kb):
 def test_turn_reports_latency_and_not_understood_intent(attendant):
     t = attendant.handle(PHONE, "asdfgh")
     assert t.intent == NOT_UNDERSTOOD and t.latency_ms >= 0
+
+
+class _Gate:
+    """Provider that blocks on messages containing "lento" until released."""
+
+    def __init__(self, kb) -> None:
+        self.local = LocalProvider(kb)
+        self.entered = threading.Event()
+        self.release = threading.Event()
+
+    def classify(self, text):
+        if "lento" in text:
+            self.entered.set()
+            self.release.wait(timeout=5)
+        return self.local.classify(text)
+
+
+def test_ca_16_one_slow_phone_does_not_block_another(kb):
+    gate = _Gate(kb)
+    attendant = Attendant(kb, gate)
+    slow = threading.Thread(target=attendant.handle, args=("5511000000001", "pedido lento"))
+    slow.start()
+    assert gate.entered.wait(timeout=5)
+    start = time.perf_counter()
+    other = attendant.handle("5511000000002", "bom dia")
+    elapsed = time.perf_counter() - start
+    gate.release.set()
+    slow.join(timeout=5)
+    assert other.intent == "greeting" and elapsed < 1.0

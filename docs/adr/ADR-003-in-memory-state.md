@@ -9,9 +9,9 @@ The service keeps three kinds of state: a session per phone (pending question, c
 
 ## Decision
 
-- Sessions and processed ids live in `TTLStore`, a thread-safe least-recently-used map with a TTL and a size cap (`dialogue.session_ttl_seconds`, `dialogue.max_sessions`, `whatsapp.idempotency_ttl_seconds`, `whatsapp.idempotency_max_ids`).
+- Sessions and processed ids live in `TTLStore`, a thread-safe least-recently-used map with a TTL and a size cap (`dialogue.session_ttl_seconds`, `dialogue.max_sessions`, `whatsapp.idempotency_ttl_seconds`, `whatsapp.idempotency_max_ids`). Processed ids go through `MessageLedger` (claim, complete, fail), which marks an id only after success (ADR-006).
 - The learning queue is a bounded deque (`dialogue.learning_queue_size`).
-- The attendant holds one lock per process while it updates a session.
+- Each session has its own lock: messages of one phone are handled one at a time, and different phones never wait for each other (amended on 2026-10-23; the first version held one lock per process, around the classification too).
 - There is no database, so there are no schema migrations and no backups in this version.
 
 ## Consequences

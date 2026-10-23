@@ -16,6 +16,9 @@ COUNTERS = (
     "handoff_repeated_failures",
     "send_failures",
     "invalid_signatures",
+    "oversized_bodies",
+    "processing_errors",
+    "dead_letters",
 )
 
 

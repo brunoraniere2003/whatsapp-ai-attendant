@@ -16,12 +16,12 @@ The hard parts are not the replies. They are knowing when the bot did not unders
 
 ## What it does
 
-- **Cloud API webhook.** `GET /webhook` answers Meta's verification, `POST /webhook` checks the `X-Hub-Signature-256` HMAC, ignores redelivered message ids and answers text, button and list replies. Media messages get a polite request for text. Replies go out after the HTTP response, and only network errors and HTTP 408, 425, 429, 500, 502, 503 and 504 are retried, with exponential backoff.
+- **Cloud API webhook.** `GET /webhook` answers Meta's verification, `POST /webhook` checks the `X-Hub-Signature-256` HMAC and answers text, button and list replies. It fails closed: without an app secret every event gets 503, and bodies over 1 MiB get 413 before any work. Messages are handled in a worker thread, so a slow classification never stalls `/health` or another customer, and a message id is marked done only after it was handled: a failure answers 500 so Meta redelivers it, and redelivered ids are skipped. Media messages get a polite request for text. Replies go out after the HTTP response, and only network errors and HTTP 408, 425, 429, 500, 502, 503 and 504 are retried, with exponential backoff.
 - **Local intent engine.** TF-IDF over words and character trigrams, trained in milliseconds from an editable knowledge base (9 intents in Brazilian Portuguese). Trigrams survive the way people type on a phone: no accents, abbreviations, missing letters. Messages below a confidence threshold are rejected instead of guessed.
 - **Dialogue rules.** One session per phone. Intents that need an order number ask for it, re-ask on a wrong reply and answer when it arrives; a number already in the message is used at once. A confident new topic leaves the pending question. Two failed turns in a row, or a request for a person, hand the conversation to a human, and the bot goes silent.
 - **Learning queue.** Every message the engine rejects is kept, with the phone masked and the engine's best guess, so the team can approve it as a new example.
 - **Optional LLM second layer.** With `ANTHROPIC_API_KEY` set, only messages the local engine rejected go to Claude, with the order number masked, and the answer is constrained by a JSON schema whose intent is an enum of the known intents. Without the key nothing leaves the machine.
-- **Operations.** Strict TOML configuration, secrets only from the environment, JSON logs to a rotating file with masked phones, `/health` and a `health` command that exit non-zero on failure, `/metrics` with counters and p50/p95 latency.
+- **Operations.** Strict TOML configuration, secrets only from the environment, JSON logs to a rotating file with masked phones and hashed message ids (a `wamid` encodes the sender's phone), `/health` and a `health` command that exit non-zero on failure, `/metrics` with counters and p50/p95 latency.
 - **Evidence.** One command runs a seeded evaluation and writes `evidencia/metricas.json`, an English and a Portuguese report and sample transcripts. A demo console and dashboard show the same engine running.
 
 ## How to run
@@ -40,10 +40,12 @@ On Windows without uv on the path, the same commands run with `.venv\Scripts\pyt
 Try the webhook locally with a Cloud API payload:
 
 ```bash
-export WA_VERIFY_TOKEN=change-me
+export WA_VERIFY_TOKEN=change-me WA_APP_SECRET=dev-secret
 uv run python -m whatsapp_attendant serve
 curl "http://127.0.0.1:8000/webhook?hub.mode=subscribe&hub.verify_token=change-me&hub.challenge=42"
-curl -X POST http://127.0.0.1:8000/webhook -H "content-type: application/json" -d '{"entry":[{"changes":[{"value":{"messages":[{"from":"5511900000001","id":"wamid.1","type":"text","text":{"body":"cadê meu pedido 482915?"}}]}}]}]}'
+body='{"entry":[{"changes":[{"value":{"messages":[{"from":"5511900000001","id":"wamid.1","type":"text","text":{"body":"cadê meu pedido 482915?"}}]}}]}]}'
+sig=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$WA_APP_SECRET" | sed 's/^.* //')
+curl -X POST http://127.0.0.1:8000/webhook -H "content-type: application/json" -H "x-hub-signature-256: sha256=$sig" -d "$body"
 curl http://127.0.0.1:8000/metrics
 uv run python -m whatsapp_attendant health --url http://127.0.0.1:8000   # exit 0 or 1
 ```
@@ -55,19 +57,24 @@ Tunables live in a TOML file; [config.example.toml](config.example.toml) documen
 | Variable | Used for | Without it |
 |---|---|---|
 | `WA_VERIFY_TOKEN` | webhook verification | verification always answers 403 |
-| `WA_APP_SECRET` | HMAC check of every event | events are accepted unsigned (local tests only) |
-| `WA_ACCESS_TOKEN`, `WA_PHONE_NUMBER_ID` | sending through the Graph API | replies are recorded in memory, nothing is sent |
+| `WA_APP_SECRET` | HMAC check of every event | the webhook answers 503 and `/health` fails; `whatsapp.allow_unsigned = true` accepts unsigned events, for local tests only |
+| `WA_ACCESS_TOKEN`, `WA_PHONE_NUMBER_ID` | sending through the Graph API | replies are recorded in memory, nothing is sent; the token without `WA_APP_SECRET` stops the service at startup |
 | `ANTHROPIC_API_KEY` | optional LLM second layer (`pip install .[llm]`) | local engine only, no outbound call |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    WA[WhatsApp Cloud API] -->|POST /webhook| SIG{HMAC valid?}
+    WA[WhatsApp Cloud API] -->|POST /webhook| SEC{app secret set?}
+    SEC -->|no| E503[503]
+    SEC -->|yes| CAP{body within 1 MiB?}
+    CAP -->|no| E413[413]
+    CAP -->|yes| SIG{HMAC valid?}
     SIG -->|no| E401[401]
-    SIG -->|yes| IDEM{message id seen?}
+    SIG -->|yes| IDEM{id done or in flight?}
     IDEM -->|yes| DUP[skip and count]
-    IDEM -->|no| ATT[Attendant<br/>session per phone]
+    IDEM -->|no| ATT[Attendant in a worker thread<br/>lock per phone]
+    ATT -->|raised| E500[500, Meta redelivers<br/>dead letter after 3]
     ATT --> MASK[mask order number]
     MASK --> NLU[TF-IDF classifier<br/>words + char trigrams]
     NLU -->|rejected and key set| LLM[Claude<br/>JSON schema enum]
@@ -79,7 +86,7 @@ flowchart LR
     BG --> GRAPH[Graph API<br/>retry transient errors]
 ```
 
-The design keeps the expensive and unpredictable parts at the edge. The local engine decides most messages in well under a millisecond and can be tested offline; the LLM is a fallback for what the engine rejects, never a dependency. Every external system sits behind a small interface (`IntentProvider`, `Sender`, `OrderBackend`), so a real ERP, Twilio or another LLM provider is one class, not a rewrite. Decisions are recorded in [docs/adr](docs/adr): [stack](docs/adr/ADR-001-stack.md), [local engine first](docs/adr/ADR-002-local-intent-engine.md), [in-memory state](docs/adr/ADR-003-in-memory-state.md) and [evaluation protocol](docs/adr/ADR-004-evaluation-protocol.md).
+The design keeps the expensive and unpredictable parts at the edge. The local engine decides most messages in well under a millisecond and can be tested offline; the LLM is a fallback for what the engine rejects, never a dependency. Every external system sits behind a small interface (`IntentProvider`, `Sender`, `OrderBackend`), so a real ERP, Twilio or another LLM provider is one class, not a rewrite. Decisions are recorded in [docs/adr](docs/adr): [stack](docs/adr/ADR-001-stack.md), [local engine first](docs/adr/ADR-002-local-intent-engine.md), [in-memory state](docs/adr/ADR-003-in-memory-state.md), [evaluation protocol](docs/adr/ADR-004-evaluation-protocol.md) and [webhook processing](docs/adr/ADR-006-webhook-processing.md).
 
 | Path | What is there |
 |---|---|

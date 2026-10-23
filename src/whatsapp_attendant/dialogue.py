@@ -58,12 +58,14 @@ class Turn:
 
 @dataclass
 class Session:
+    """State of one phone. `lock` serializes that phone's messages only (RQ-34)."""
+
     phone: str
-    turns: list[Turn] = field(default_factory=list)
     pending_intent: str | None = None
     slots: dict[str, str] = field(default_factory=dict)
     failed_turns: int = 0
     handoff_reason: HandoffReason | None = None
+    lock: threading.Lock = field(default_factory=threading.Lock, repr=False, compare=False)
 
     @property
     def with_human(self) -> bool:
@@ -99,7 +101,6 @@ class Attendant:
             self.settings.session_ttl_seconds, self.settings.max_sessions, clock
         )
         self.learning_queue: deque[LearningItem] = deque(maxlen=self.settings.learning_queue_size)
-        self._lock = threading.RLock()
 
     # public API -------------------------------------------------------------------------------
 
@@ -108,35 +109,34 @@ class Attendant:
         return session
 
     def handle(self, phone: str, text: str) -> Turn:
-        """Answer one text message from `phone`."""
+        """Answer one text message from `phone`.
+
+        Only messages of the same phone wait for each other; the classification, which may call
+        the LLM, never holds a lock shared by other phones.
+        """
         start = time.perf_counter()
-        with self._lock:
-            session = self.session(phone)
+        session = self.session(phone)
+        with session.lock:
             if session.with_human:
                 turn = Turn(text, WITH_HUMAN, 1.0, Action.SILENT, None)
             elif session.pending_intent:
                 turn = self._continue_slot(session, text)
             else:
                 turn = self._new_topic(session, text)
-            turn = replace(
+            return replace(
                 turn,
                 slots=dict(session.slots),
                 latency_ms=round((time.perf_counter() - start) * 1000, 3),
             )
-            session.turns.append(turn)
-        return turn
 
     def handle_unsupported(self, phone: str, kind: str) -> Turn:
         """A media message (image, audio...): ask for text, unless a human already has it."""
-        with self._lock:
-            session = self.session(phone)
+        session = self.session(phone)
+        with session.lock:
             if session.with_human:
-                turn = Turn(f"[{kind}]", WITH_HUMAN, 1.0, Action.SILENT, None)
-            else:
-                reply = self.kb.render(self.kb.unsupported_reply)
-                turn = Turn(f"[{kind}]", UNSUPPORTED, 1.0, Action.UNSUPPORTED, reply)
-            session.turns.append(turn)
-        return turn
+                return Turn(f"[{kind}]", WITH_HUMAN, 1.0, Action.SILENT, None)
+            reply = self.kb.render(self.kb.unsupported_reply)
+            return Turn(f"[{kind}]", UNSUPPORTED, 1.0, Action.UNSUPPORTED, reply)
 
     # rules ------------------------------------------------------------------------------------
 

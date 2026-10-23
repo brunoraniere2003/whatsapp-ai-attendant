@@ -61,5 +61,8 @@ def get_logger() -> logging.Logger:
     return logging.getLogger(LOGGER_NAME)
 
 
-def log_event(event: str, level: int = logging.INFO, **fields: object) -> None:
-    get_logger().log(level, event, extra={"fields": fields})
+def log_event(
+    event: str, level: int = logging.INFO, *, exc_info: bool = False, **fields: object
+) -> None:
+    """One JSON line. `exc_info=True` inside an `except` adds the traceback as `exc`."""
+    get_logger().log(level, event, exc_info=exc_info, extra={"fields": fields})

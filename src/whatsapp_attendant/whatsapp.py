@@ -17,6 +17,7 @@ from .logs import log_event, mask_phone
 
 GRAPH_URL = "https://graph.facebook.com/{version}/{phone_number_id}/messages"
 TRANSIENT_STATUS = frozenset({408, 425, 429, 500, 502, 503, 504})
+MAX_TEXT_CHARS = 4096  # longest text message the Cloud API delivers
 
 
 @dataclass(frozen=True)
@@ -27,36 +28,56 @@ class InboundMessage:
     text: str | None
 
 
-def _text_of(message: dict[str, Any]) -> str | None:
+def _dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
+def _text_of(message: dict[str, Any]) -> tuple[str, str | None] | None:
+    """(kind, text) of a message; None when a text message is malformed and must be skipped."""
     kind = message.get("type")
     if kind == "text":
-        return (message.get("text") or {}).get("body")
+        body = _dict(message.get("text")).get("body")
+        return ("text", body) if isinstance(body, str) else None
     if kind == "interactive":  # reply buttons and list pickers
-        inner = message.get("interactive") or {}
-        choice = inner.get("button_reply") or inner.get("list_reply") or {}
-        return choice.get("title")
+        inner = message.get("interactive")
+        if not isinstance(inner, dict):
+            return None
+        choice = _dict(inner.get("button_reply")) or _dict(inner.get("list_reply"))
+        title = choice.get("title")
+        return ("text", title) if isinstance(title, str) else ("interactive", None)
     if kind == "button":  # quick reply of a template
-        return (message.get("button") or {}).get("text")
-    return None
+        label = _dict(message.get("button")).get("text")
+        return ("text", label) if isinstance(label, str) else None
+    return (kind if isinstance(kind, str) and kind else "unknown"), None
 
 
 def parse_messages(payload: Any) -> list[InboundMessage]:
-    """Inbound messages of a webhook payload; status updates and malformed parts are skipped."""
-    if not isinstance(payload, dict):
-        return []
+    """Inbound messages of a webhook payload (RQ-7).
+
+    Status updates and malformed parts (anything that is not the documented shape) are skipped,
+    never raised. Text longer than the Cloud API allows is cut at MAX_TEXT_CHARS.
+    """
     found: list[InboundMessage] = []
-    for entry in payload.get("entry") or []:
-        for change in (entry or {}).get("changes") or []:
-            value = (change or {}).get("value") or {}
-            for message in value.get("messages") or []:
+    for entry in _list(_dict(payload).get("entry")):
+        for change in _list(_dict(entry).get("changes")):
+            for message in _list(_dict(_dict(change).get("value")).get("messages")):
                 if not isinstance(message, dict):
                     continue
                 phone, message_id = message.get("from"), message.get("id")
-                if not phone or not message_id:
+                if not (isinstance(phone, str) and phone and isinstance(message_id, str)):
                     continue
-                text = _text_of(message)
-                kind = "text" if text is not None else str(message.get("type") or "unknown")
-                found.append(InboundMessage(str(phone), str(message_id), kind, text))
+                if not message_id:
+                    continue
+                parsed = _text_of(message)
+                if parsed is None:
+                    continue
+                kind, text = parsed
+                text = text[:MAX_TEXT_CHARS] if text is not None else None
+                found.append(InboundMessage(phone, message_id, kind, text))
     return found
 
 
@@ -67,9 +88,13 @@ def signature_for(app_secret: str, body: bytes) -> str:
 
 def verify_signature(app_secret: str, body: bytes, header: str | None) -> bool:
     """Constant-time check of the X-Hub-Signature-256 header (RQ-3)."""
-    if not header:
+    if not header or not header.strip():
         return False
-    return hmac.compare_digest(signature_for(app_secret, body), header.strip())
+    try:
+        given = header.strip().lower().encode("ascii")
+    except UnicodeEncodeError:  # a forged header, not a server error
+        return False
+    return hmac.compare_digest(signature_for(app_secret, body).encode("ascii"), given)
 
 
 class SendError(RuntimeError):

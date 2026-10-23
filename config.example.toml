@@ -34,9 +34,10 @@ effort = "low"
 # The LLM answer is accepted only at or above this confidence (0 to 1).
 min_confidence = 0.6
 max_tokens = 1024
-timeout_seconds = 10.0
-# Retries of transient errors (429, 5xx, network) done by the SDK (0 to 5).
-max_retries = 2
+# Inline budget: the webhook request waits for this call (above 0, up to 5 seconds).
+timeout_seconds = 3.0
+# Retries of transient errors (429, 5xx, network) done by the SDK (0 or 1).
+max_retries = 1
 # Server-side fallback model when a request is refused.
 server_fallbacks = true
 
@@ -51,6 +52,13 @@ send_backoff_seconds = 0.5
 # How long a processed message id is remembered, in seconds (60 to 604800).
 idempotency_ttl_seconds = 86400
 idempotency_max_ids = 50000
+# Failed attempts before a message is dead-lettered instead of redelivered by Meta (1 to 10).
+max_processing_attempts = 3
+# Largest webhook body read, in bytes; larger ones get 413 (1024 to 10485760).
+max_body_bytes = 1048576
+# Accept events without a signature when WA_APP_SECRET is not set. Local tests only: without
+# the secret and with this false, the webhook answers 503 and /health fails.
+allow_unsigned = false
 
 [logging]
 # JSON lines, rotated by size. Never written to stdout.

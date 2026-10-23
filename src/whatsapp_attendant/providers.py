@@ -10,12 +10,13 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 from typing import Any, Protocol
 
 from .config import EngineSettings, LLMSettings, Secrets
 from .knowledge import NOT_UNDERSTOOD, KnowledgeBase
 from .logs import log_event
-from .nlu import Prediction, TfidfClassifier
+from .nlu import Prediction, TfidfClassifier, features
 
 SERVER_FALLBACK_BETA = "server-side-fallback-2026-07-01"
 
@@ -94,7 +95,7 @@ class LLMFallbackProvider:
 
     def classify(self, text: str) -> Prediction:
         local = self.local.classify(text)
-        if local.understood or not text.strip():
+        if local.understood or not features(text):  # nothing left to classify: no call (RQ-10)
             return local
         try:
             response = self._ask(text)
@@ -104,7 +105,10 @@ class LLMFallbackProvider:
             body = next(b.text for b in response.content if getattr(b, "type", "") == "text")
             data = json.loads(body)
             intent = str(data["intent"])
-            confidence = max(0.0, min(1.0, float(data["confidence"])))
+            confidence = float(data["confidence"])
+            if not math.isfinite(confidence):
+                raise ValueError("the confidence is not a finite number")
+            confidence = max(0.0, min(1.0, confidence))
         except Exception as exc:  # any LLM failure degrades to the local result (RQ-10)
             log_event("llm.error", logging.WARNING, error=type(exc).__name__)
             return local

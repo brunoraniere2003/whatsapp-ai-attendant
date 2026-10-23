@@ -79,3 +79,33 @@ def test_ca_6_failures_keep_local_and_log_llm_error(kb, settings, messages):
     setup_logging(settings.logging)
     assert _provider(kb, messages).classify(LOW).intent == "not_understood"
     assert any(e["event"] == "llm.error" for e in read_log(settings))
+
+
+@pytest.mark.parametrize("confidence", ["NaN", "Infinity"])
+def test_ca_6_a_non_finite_llm_confidence_keeps_local(kb, settings, confidence):
+    setup_logging(settings.logging)
+    answer = f'{{"intent": "greeting", "confidence": {confidence}}}'
+    assert _provider(kb, FakeMessages(answer)).classify(LOW).intent == "not_understood"
+    assert any(e["event"] == "llm.error" for e in read_log(settings))
+
+
+def test_ca_6_a_message_without_content_words_never_reaches_the_llm(kb):
+    messages = FakeMessages({"intent": "greeting", "confidence": 0.99})
+    provider = _provider(kb, messages)
+    for text in ("o", "é o", "!!!", " , "):
+        assert provider.classify(text).intent == "not_understood"
+    assert messages.calls == []
+
+
+def test_ca_16_the_llm_client_gets_the_inline_budget(kb, monkeypatch):
+    import anthropic
+
+    captured = {}
+
+    def fake_client(**kwargs):
+        captured.update(kwargs)
+        return FakeLLMClient(FakeMessages())
+
+    monkeypatch.setattr(anthropic, "Anthropic", fake_client)
+    build_provider(kb, EngineSettings(), LLMSettings(), Secrets(llm_api_key="test"))
+    assert (captured["timeout"], captured["max_retries"]) == (3.0, 1)
