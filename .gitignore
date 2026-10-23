@@ -24,3 +24,8 @@ logs/
 # Secrets
 .env
 .env.*
+!.env.example
+
+# Local only: template answers and agent notes
+.copier-answers.yml
+CLAUDE.md
