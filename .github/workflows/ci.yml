@@ -1,0 +1,67 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
+        with:
+          python-version: "3.13"
+      - name: Dependências
+        run: uv sync
+      - name: Lint e formato
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Testes
+        run: uv run pytest --cov --cov-report=term-missing
+
+  segredos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: gitleaks
+        env:
+          VERSAO: "8.30.1"
+        run: |
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${VERSAO}"
+          curl -sSLO "${base}/gitleaks_${VERSAO}_linux_x64.tar.gz"
+          curl -sSLO "${base}/gitleaks_${VERSAO}_checksums.txt"
+          sha256sum --check --ignore-missing "gitleaks_${VERSAO}_checksums.txt"
+          tar xzf "gitleaks_${VERSAO}_linux_x64.tar.gz" gitleaks
+          ./gitleaks git --redact --no-banner .
+
+  commits:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Commits convencionais
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          bad=0
+          for s in $(git log --no-merges --format=%H "$BASE_SHA..$HEAD_SHA"); do
+            m=$(git log -1 --format=%s "$s")
+            echo "$m" | grep -Eq '^(feat|fix|docs|chore|refactor|test|ci|build|perf|style|revert)(\([a-z0-9._-]+\))?!?: .+' || { echo "fora do padrão: $m"; bad=1; }
+          done
+          exit $bad
