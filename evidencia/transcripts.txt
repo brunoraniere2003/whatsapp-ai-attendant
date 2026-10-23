@@ -1,0 +1,293 @@
+Simulated conversations (fictional customers, phones masked).
+
+=== 5511*******18 | main question: order_status | resolved ===
+Customer: boa tarde, preciso de uma ajuda
+Bot [answer, greeting, 0.80]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: quero trabalhar com vocês
+Bot [not_understood, not_understood, 0.09]: Não consegui identificar o assunto. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, confirmação de pagamento, troca, cancelamento ou horário de atendimento.
+Customer: tem código de rastreamento? pfv, pedido 781453
+Bot [answer, order_status, 0.53]: O pedido 781453 está em separação no estoque, com envio previsto para o próximo dia útil. O código de rastreio também foi enviado para o seu e-mail.
+
+=== 5511*******26 | main question: business_hours | resolved ===
+Customer: olá, boa tarde
+Bot [answer, greeting, 0.82]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: abem sábado? urgente
+Bot [answer, business_hours, 0.44]: O atendimento humano funciona de segunda a sexta, das 8h às 18h. Este canal automático responde 24 horas, todos os dias.
+
+=== 5511*******49 | main question: order_status | resolved ===
+Customer: qual o sattus do meu pedido por favor
+Bot [ask_slot, order_status, 0.38]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: 575435 esse aqui
+Bot [answer, order_status, 1.00]: O pedido 575435 está em transporte, com entrega prevista em até 3 dias úteis. O código de rastreio também foi enviado para o seu e-mail.
+
+=== 5511*******92 | main question: invoice_copy | misrouted ===
+Customer: oiee
+Bot [answer, greeting, 0.20]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: o código de barras do boleto não funciona por favor
+Bot [ask_slot, order_status, 0.38]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: 913694
+Bot [answer, order_status, 1.00]: O pedido 913694 está em separação no estoque, com envio previsto para o próximo dia útil. O código de rastreio também foi enviado para o seu e-mail.
+Customer: obrigadão
+Bot [answer, goodbye, 0.41]: Eu que agradeço. Se precisar de algo mais, é só mandar mensagem por aqui.
+
+=== 5511*******53 | main question: cancel_order | resolved ===
+Customer: não quero masi esse pedido?
+Bot [ask_slot, cancel_order, 0.24]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: pedido 329974
+Bot [answer, cancel_order, 1.00]: O pedido 329974 foi marcado para cancelamento. Se ele ainda não saiu do estoque, o estorno volta para a mesma forma de pagamento em até 7 dias úteis.
+
+=== 5511*******91 | main question: payment_status | resolved ===
+Customer: opa, boa noite
+Bot [answer, greeting, 0.79]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: mandei o comprovante, ta pago
+Bot [ask_slot, payment_status, 0.43]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: nao tenho aqui agora
+Bot [reask_slot, payment_status, 0.31]: Não encontrei um número de pedido com 6 dígitos na mensagem. Pode conferir e enviar de novo?
+Customer: 905934 esse aqui
+Bot [answer, payment_status, 1.00]: Consultei o pedido 905934: o pagamento já foi confirmado. Pix é confirmado em minutos e boleto em até 2 dias úteis.
+Customer: muito obrigada
+Bot [answer, goodbye, 0.56]: Eu que agradeço. Se precisar de algo mais, é só mandar mensagem por aqui.
+
+=== 5511*******28 | main question: invoice_copy | misrouted ===
+Customer: o código de barras do boleto não funciona por favor, pedido 899550
+Bot [answer, order_status, 0.38]: O pedido 899550 está em separação no estoque, com envio previsto para o próximo dia útil. O código de rastreio também foi enviado para o seu e-mail.
+Customer: agradeço
+Bot [not_understood, not_understood, 0.06]: Não consegui identificar o assunto. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, confirmação de pagamento, troca, cancelamento ou horário de atendimento.
+
+=== 5511*******54 | main question: human_agent | misrouted ===
+Customer: oiee
+Bot [answer, greeting, 0.20]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: me passa para alguém
+Bot [answer, greeting, 0.45]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+
+=== 5511*******48 | main question: order_status | resolved ===
+Customer: tem código de rastreamento? por favor
+Bot [ask_slot, order_status, 0.63]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: 804314 esse aqui
+Bot [answer, order_status, 1.00]: O pedido 804314 está em separação no estoque, com envio previsto para o próximo dia útil. O código de rastreio também foi enviado para o seu e-mail.
+Customer: agradeço
+Bot [not_understood, not_understood, 0.06]: Não consegui identificar o assunto. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, confirmação de pagamento, troca, cancelamento ou horário de atendimento.
+
+=== 5511*******09 | main question: order_status | resolved ===
+Customer: opa, boa noite
+Bot [answer, greeting, 0.79]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: faz 10 dis e não chegou nada
+Bot [ask_slot, order_status, 0.27]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: pedido 608993
+Bot [answer, order_status, 1.00]: O pedido 608993 está entregue, com o recebimento registrado pela transportadora. O código de rastreio também foi enviado para o seu e-mail.
+
+=== 5511*******31 | main question: invoice_copy | resolved ===
+Customer: boa tarde, preciso de uma ajuda
+Bot [answer, greeting, 0.80]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: segunda via do boleto pf, pedido 863587
+Bot [answer, invoice_copy, 0.83]: Pronto: a segunda via do boleto do pedido 863587, com vencimento atualizado, e a nota fiscal foram enviadas para o e-mail cadastrado. O boleto vale por 3 dias úteis.
+Customer: ok, obrigada pela ajuda
+Bot [answer, goodbye, 0.74]: Eu que agradeço. Se precisar de algo mais, é só mandar mensagem por aqui.
+
+=== 5511*******62 | main question: order_status | resolved ===
+Customer: oiee
+Bot [answer, greeting, 0.20]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: quero saber onde ta minha encomenda pfv, pedido 783823
+Bot [answer, order_status, 0.43]: O pedido 783823 está entregue, com o recebimento registrado pela transportadora. O código de rastreio também foi enviado para o seu e-mail.
+
+=== 5511*******73 | main question: order_status | resolved ===
+Customer: meu pedido ainda nao chegou urgente
+Bot [ask_slot, order_status, 0.56]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: o número é 399105
+Bot [answer, order_status, 1.00]: O pedido 399105 está entregue, com o recebimento registrado pela transportadora. O código de rastreio também foi enviado para o seu e-mail.
+
+=== 5511*******09 | main question: order_status | misrouted ===
+Customer: quero cancelar meu plano de celular
+Bot [ask_slot, cancel_order, 0.38]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: não lembro
+Bot [reask_slot, cancel_order, 0.05]: Não encontrei um número de pedido com 6 dígitos na mensagem. Pode conferir e enviar de novo?
+Customer: nº 171849
+Bot [answer, cancel_order, 1.00]: O pedido 171849 foi marcado para cancelamento. Se ele ainda não saiu do estoque, o estorno volta para a mesma forma de pagamento em até 7 dias úteis.
+Customer: a transportadora já pegou meu pedido? pfv, pedido 632496
+Bot [answer, cancel_order, 0.19]: O pedido 632496 foi marcado para cancelamento. Se ele ainda não saiu do estoque, o estorno volta para a mesma forma de pagamento em até 7 dias úteis.
+Customer: era só isso mesmo, obrigado
+Bot [answer, goodbye, 0.72]: Eu que agradeço. Se precisar de algo mais, é só mandar mensagem por aqui.
+
+=== 5511*******09 | main question: payment_status | resolved ===
+Customer: oi, bom dia
+Bot [answer, greeting, 0.85]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: meu pagaamento caiu??, pedido 776856
+Bot [answer, payment_status, 0.67]: Consultei o pedido 776856: o pagamento já foi confirmado. Pix é confirmado em minutos e boleto em até 2 dias úteis.
+Customer: show, valeu
+Bot [answer, goodbye, 0.70]: Eu que agradeço. Se precisar de algo mais, é só mandar mensagem por aqui.
+
+=== 5511*******18 | main question: invoice_copy | misrouted ===
+Customer: e ai, tudo bom?
+Bot [answer, greeting, 0.48]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: o boleto não chegou no meu email!!, pedido 559469
+Bot [answer, return_exchange, 0.36]: Abri a solicitação de troca ou devolução do pedido 559469. A etiqueta de postagem gratuita chega no seu e-mail e, quando o produto chegar ao nosso centro, a troca ou o reembolso sai em até 5 dias úteis.
+
+=== 5511*******12 | main question: order_status | resolved ===
+Customer: boa noite pessoal
+Bot [answer, greeting, 0.71]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: quero acompanhar a entrega!!, pedido 765046
+Bot [answer, order_status, 0.70]: O pedido 765046 está em separação no estoque, com envio previsto para o próximo dia útil. O código de rastreio também foi enviado para o seu e-mail.
+
+=== 5511*******40 | main question: order_status | misrouted ===
+Customer: olá, boa tarde
+Bot [answer, greeting, 0.82]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: meu pedido ta parado?
+Bot [ask_slot, cancel_order, 0.33]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: não lembro
+Bot [reask_slot, cancel_order, 0.05]: Não encontrei um número de pedido com 6 dígitos na mensagem. Pode conferir e enviar de novo?
+Customer: 672092
+Bot [answer, cancel_order, 1.00]: O pedido 672092 foi marcado para cancelamento. Se ele ainda não saiu do estoque, o estorno volta para a mesma forma de pagamento em até 7 dias úteis.
+
+=== 5511*******45 | main question: cancel_order | resolved ===
+Customer: como cancelo meu pdeido!!
+Bot [ask_slot, cancel_order, 0.72]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: nº 526117
+Bot [answer, cancel_order, 1.00]: O pedido 526117 foi marcado para cancelamento. Se ele ainda não saiu do estoque, o estorno volta para a mesma forma de pagamento em até 7 dias úteis.
+
+=== 5511*******56 | main question: business_hours | resolved ===
+Customer: vocês trabalhm domingo?
+Bot [answer, business_hours, 0.51]: O atendimento humano funciona de segunda a sexta, das 8h às 18h. Este canal automático responde 24 horas, todos os dias.
+
+=== 5511*******30 | main question: order_status | resolved ===
+Customer: qual o status do meu pedido urgente
+Bot [ask_slot, order_status, 0.70]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: nº 812526
+Bot [answer, order_status, 1.00]: O pedido 812526 está em separação no estoque, com envio previsto para o próximo dia útil. O código de rastreio também foi enviado para o seu e-mail.
+Customer: obrigadão
+Bot [answer, goodbye, 0.41]: Eu que agradeço. Se precisar de algo mais, é só mandar mensagem por aqui.
+
+=== 5511*******19 | main question: human_agent | misrouted ===
+Customer: olá, tem alguém aí?
+Bot [answer, greeting, 0.69]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: me passa para alguém por favor
+Bot [answer, greeting, 0.45]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: vlw
+Bot [not_understood, not_understood, 0.00]: Não consegui identificar o assunto. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, confirmação de pagamento, troca, cancelamento ou horário de atendimento.
+
+=== 5511*******61 | main question: payment_status | resolved ===
+Customer: vcs ja identificaram meu pagamento? urgente
+Bot [ask_slot, payment_status, 0.30]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: o número é 442027
+Bot [answer, payment_status, 1.00]: Consultei o pedido 442027: o pagamento está em compensação. Pix é confirmado em minutos e boleto em até 2 dias úteis.
+
+=== 5511*******99 | main question: invoice_copy | resolved ===
+Customer: bom dia, tudo bem com vocês?
+Bot [answer, greeting, 0.67]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: quero emitir a segunda via!!
+Bot [ask_slot, invoice_copy, 0.62]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: nº 324082
+Bot [answer, invoice_copy, 1.00]: Pronto: a segunda via do boleto do pedido 324082, com vencimento atualizado, e a nota fiscal foram enviadas para o e-mail cadastrado. O boleto vale por 3 dias úteis.
+Customer: vlw
+Bot [not_understood, not_understood, 0.00]: Não consegui identificar o assunto. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, confirmação de pagamento, troca, cancelamento ou horário de atendimento.
+
+=== 5511*******13 | main question: order_status | resolved ===
+Customer: meu pedido ainda nao chegou
+Bot [ask_slot, order_status, 0.72]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: pedido 703634
+Bot [answer, order_status, 1.00]: O pedido 703634 está entregue, com o recebimento registrado pela transportadora. O código de rastreio também foi enviado para o seu e-mail.
+
+=== 5511*******16 | main question: payment_status | misrouted ===
+Customer: bom dia, tudo bem com vocês?
+Bot [answer, greeting, 0.67]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: acabei de pagra pfv
+Bot [not_understood, not_understood, 0.11]: Não consegui identificar o assunto. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, confirmação de pagamento, troca, cancelamento ou horário de atendimento.
+
+=== 5511*******27 | main question: order_status | resolved ===
+Customer: oiee
+Bot [answer, greeting, 0.20]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: quero saber onde ta minha encomenda por favor, pedido 181247
+Bot [answer, order_status, 0.51]: O pedido 181247 está entregue, com o recebimento registrado pela transportadora. O código de rastreio também foi enviado para o seu e-mail.
+
+=== 5511*******22 | main question: order_status | resolved ===
+Customer: olá, boa tarde
+Bot [answer, greeting, 0.82]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: previsão de entrega ...
+Bot [ask_slot, order_status, 0.43]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: o número é 540552
+Bot [answer, order_status, 1.00]: O pedido 540552 está em transporte, com entrega prevista em até 3 dias úteis. O código de rastreio também foi enviado para o seu e-mail.
+
+=== 5511*******54 | main question: human_agent | requested_handoff ===
+Customer: tem como falar com uma pessoa? pfv
+Bot [handoff, human_agent, 0.71]: Certo, vou transferir a conversa para um atendente, que responde de segunda a sexta, das 8h às 18h. O histórico fica registrado e você não precisa repetir nada.
+
+=== 5511*******70 | main question: invoice_copy | resolved ===
+Customer: oi, bom dia
+Bot [answer, greeting, 0.85]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: manda o boleto de novo por favor
+Bot [ask_slot, invoice_copy, 0.80]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: nº 513160
+Bot [answer, invoice_copy, 1.00]: Pronto: a segunda via do boleto do pedido 513160, com vencimento atualizado, e a nota fiscal foram enviadas para o e-mail cadastrado. O boleto vale por 3 dias úteis.
+
+=== 5511*******04 | main question: invoice_copy | misrouted ===
+Customer: oiee
+Bot [answer, greeting, 0.20]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: preciso da nf da compra pra empresa urgente
+Bot [ask_slot, cancel_order, 0.25]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: nº 885408
+Bot [answer, cancel_order, 1.00]: O pedido 885408 foi marcado para cancelamento. Se ele ainda não saiu do estoque, o estorno volta para a mesma forma de pagamento em até 7 dias úteis.
+Customer: show, valeu
+Bot [answer, goodbye, 0.70]: Eu que agradeço. Se precisar de algo mais, é só mandar mensagem por aqui.
+
+=== 5511*******09 | main question: order_status | resolved ===
+Customer: olá, boa tarde
+Bot [answer, greeting, 0.82]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: quando a encomenda chega urgente
+Bot [ask_slot, order_status, 0.59]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: não sei o número
+Bot [reask_slot, order_status, 0.06]: Não encontrei um número de pedido com 6 dígitos na mensagem. Pode conferir e enviar de novo?
+Customer: pedido 915573
+Bot [answer, order_status, 1.00]: O pedido 915573 está saiu para entrega e chega hoje. O código de rastreio também foi enviado para o seu e-mail.
+
+=== 5511*******63 | main question: return_exchange | resolved ===
+Customer: oi, bom dia
+Bot [answer, greeting, 0.85]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: chegou com defeito, e agora?
+Bot [ask_slot, return_exchange, 0.40]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: é o 143064
+Bot [answer, return_exchange, 1.00]: Abri a solicitação de troca ou devolução do pedido 143064. A etiqueta de postagem gratuita chega no seu e-mail e, quando o produto chegar ao nosso centro, a troca ou o reembolso sai em até 5 dias úteis.
+
+=== 5511*******71 | main question: business_hours | misrouted ===
+Customer: olá, tem alguém aí?
+Bot [answer, greeting, 0.69]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: tem plantoã no fim de semana? pfv
+Bot [not_understood, not_understood, 0.04]: Não consegui identificar o assunto. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, confirmação de pagamento, troca, cancelamento ou horário de atendimento.
+
+=== 5511*******14 | main question: invoice_copy | resolved ===
+Customer: me manda a segunda via da fatura!!, pedido 992288
+Bot [answer, invoice_copy, 0.89]: Pronto: a segunda via do boleto do pedido 992288, com vencimento atualizado, e a nota fiscal foram enviadas para o e-mail cadastrado. O boleto vale por 3 dias úteis.
+Customer: beleza, obrigado
+Bot [answer, goodbye, 0.64]: Eu que agradeço. Se precisar de algo mais, é só mandar mensagem por aqui.
+
+=== 5511*******48 | main question: return_exchange | resolved ===
+Customer: oiee
+Bot [answer, greeting, 0.20]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: posso trocar por outra cor? por favor
+Bot [ask_slot, return_exchange, 0.55]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: o número é 614663
+Bot [answer, return_exchange, 1.00]: Abri a solicitação de troca ou devolução do pedido 614663. A etiqueta de postagem gratuita chega no seu e-mail e, quando o produto chegar ao nosso centro, a troca ou o reembolso sai em até 5 dias úteis.
+
+=== 5511*******95 | main question: human_agent | requested_handoff ===
+Customer: bom dia, tudo bem com vocês?
+Bot [answer, greeting, 0.67]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: quero falar com o gerente ...
+Bot [handoff, human_agent, 0.47]: Certo, vou transferir a conversa para um atendente, que responde de segunda a sexta, das 8h às 18h. O histórico fica registrado e você não precisa repetir nada.
+
+=== 5511*******51 | main question: return_exchange | resolved ===
+Customer: como devolvo um produto? urgente
+Bot [ask_slot, return_exchange, 0.31]: Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra.
+Customer: nº 650121
+Bot [answer, return_exchange, 1.00]: Abri a solicitação de troca ou devolução do pedido 650121. A etiqueta de postagem gratuita chega no seu e-mail e, quando o produto chegar ao nosso centro, a troca ou o reembolso sai em até 5 dias úteis.
+Customer: ok, obrigada pela ajuda
+Bot [answer, goodbye, 0.74]: Eu que agradeço. Se precisar de algo mais, é só mandar mensagem por aqui.
+
+=== 5511*******08 | main question: payment_status | misrouted ===
+Customer: oi, tudo certo?
+Bot [answer, greeting, 0.58]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: quanto tempo demora pra compensar o boleto? ..., pedido 112861
+Bot [answer, invoice_copy, 0.19]: Pronto: a segunda via do boleto do pedido 112861, com vencimento atualizado, e a nota fiscal foram enviadas para o e-mail cadastrado. O boleto vale por 3 dias úteis.
+
+=== 5511*******47 | main question: order_status | resolved ===
+Customer: boa noite pessoal
+Bot [answer, greeting, 0.71]: Olá, aqui é o atendimento da Loja Exemplo. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?
+Customer: faz 10 dias e não chegou nada, pedido 690180
+Bot [answer, order_status, 0.27]: O pedido 690180 está em separação no estoque, com envio previsto para o próximo dia útil. O código de rastreio também foi enviado para o seu e-mail.

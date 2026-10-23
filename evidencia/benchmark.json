@@ -1,0 +1,9 @@
+{
+  "note": "machine dependent; not used in the cards",
+  "python": "3.13.16",
+  "machine": "AMD64",
+  "messages": 829,
+  "latency_p50_ms": 0.139,
+  "latency_p95_ms": 0.224,
+  "latency_max_ms": 6.306
+}
