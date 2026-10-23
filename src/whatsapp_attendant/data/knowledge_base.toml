@@ -18,6 +18,7 @@ unsupported = "Por enquanto consigo ler apenas mensagens de texto. Pode escrever
 
 [slots.order_number]
 pattern = '(?<!\d)\d{6}(?!\d)'
+cue = 'pedido|n[º°o]\.?|n[uú]mero(?: do pedido)?(?: [eé])?|[eé] o'
 ask = "Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra."
 invalid = "Não encontrei um número de pedido com 6 dígitos na mensagem. Pode conferir e enviar de novo?"
 
@@ -37,6 +38,8 @@ examples = [
     "oi, boa tarde",
     "bom dia, alguém pode me ajudar?",
     "oie",
+    "oiiii",
+    "alô, alguém?",
 ]
 reply = "Olá, aqui é o atendimento da {store}. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?"
 
@@ -57,6 +60,9 @@ examples = [
     "status do pedido",
     "a entrega ainda não chegou",
     "acompanhar meu pedido",
+    "situação do pedido",
+    "já enviaram minha compra?",
+    "ainda não recebi minha compra",
 ]
 reply = "O pedido {order_number} está {order_status}. O código de rastreio também foi enviado para o seu e-mail."
 
@@ -117,6 +123,8 @@ examples = [
     "qual o prazo para devolução?",
     "me arrependi da compra",
     "solicitar devolução",
+    "como funciona a devolução?",
+    "o produto chegou danificado",
 ]
 reply = "Abri a solicitação de troca ou devolução do pedido {order_number}. A etiqueta de postagem gratuita chega no seu e-mail e, quando o produto chegar ao nosso centro, a troca ou o reembolso sai em até 5 dias úteis."
 
@@ -137,6 +145,7 @@ examples = [
     "quero o estorno do pedido",
     "preciso cancelar uma compra",
     "posso cancelar o pedido que fiz hoje?",
+    "como faço para cancelar o pedido",
 ]
 reply = "O pedido {order_number} foi marcado para cancelamento. Se ele ainda não saiu do estoque, o estorno volta para a mesma forma de pagamento em até 7 dias úteis."
 

@@ -9,15 +9,12 @@ greeting = [
     "boa noite pessoal",
     "olá, boa tarde",
     "oiee",
-    "bom dia!",
     "e ai, tudo bom?",
     "olá, tem alguém aí?",
     "boa tarde, preciso de uma ajuda",
     "oi oi",
     "bom dia, tudo bem com vocês?",
     "opa, boa noite",
-    "ola",
-    "boa tarde!",
     "oi, bom dia",
 ]
 order_status = [
@@ -134,13 +131,11 @@ human_agent = [
 ]
 goodbye = [
     "obrigadão",
-    "valeu!",
     "ok, obrigada pela ajuda",
     "tchau tchau",
     "era só isso mesmo, obrigado",
     "muito obrigada",
     "show, valeu",
-    "resolvido, obrigado!",
     "até logo",
     "beleza, obrigado",
     "agradeço",
