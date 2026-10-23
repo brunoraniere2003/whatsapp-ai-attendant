@@ -1,0 +1,64 @@
+# Example configuration of the AI WhatsApp Attendant. Every value below is the built-in
+# default (a test keeps this file and the code in sync). Unknown keys and out-of-range values
+# stop the service at startup. Secrets never go here: see the README (environment variables).
+#
+# Use: python -m whatsapp_attendant serve --config config.toml   (or ATTENDANT_CONFIG=...)
+
+# Knowledge base file. Empty: the bundled Brazilian Portuguese one.
+knowledge_base = ""
+
+[engine]
+# Minimum cosine similarity to accept an intent (0.05 to 0.95). Chosen on the dev split.
+confidence_threshold = 0.16
+# Minimum confidence to leave a pending question for another intent (0.05 to 0.95).
+switch_threshold = 0.45
+# Weight of character trigrams relative to whole words (above 0, up to 1).
+char_ngram_weight = 0.5
+
+[dialogue]
+# Consecutive failed turns before handing off to a person (1 to 5).
+max_failed_turns = 2
+# Idle time, in seconds, after which a phone starts a new session (60 to 86400).
+session_ttl_seconds = 1800
+# Sessions kept in memory; the least recently used are dropped first (10 to 1000000).
+max_sessions = 10000
+# Misunderstood messages kept for curation (10 to 1000000).
+learning_queue_size = 5000
+
+[llm]
+# Optional second layer, used only when ANTHROPIC_API_KEY is set and the local engine
+# rejects a message.
+model = "claude-opus-5-5"
+# low, medium or high.
+effort = "low"
+# The LLM answer is accepted only at or above this confidence (0 to 1).
+min_confidence = 0.6
+max_tokens = 1024
+timeout_seconds = 10.0
+# Retries of transient errors (429, 5xx, network) done by the SDK (0 to 5).
+max_retries = 2
+# Server-side fallback model when a request is refused.
+server_fallbacks = true
+
+[whatsapp]
+graph_api_version = "v23.0"
+send_timeout_seconds = 10.0
+# Attempts per reply; only 408, 425, 429, 5xx and network errors are retried (1 to 6).
+send_max_attempts = 3
+# First backoff, doubled at each retry; a Retry-After header wins (0 to 10).
+send_backoff_seconds = 0.5
+# How long a processed message id is remembered, in seconds (60 to 604800).
+idempotency_ttl_seconds = 86400
+idempotency_max_ids = 50000
+
+[logging]
+# JSON lines, rotated by size. Never written to stdout.
+file = "logs/attendant.log"
+# DEBUG, INFO, WARNING or ERROR.
+level = "INFO"
+max_bytes = 5000000
+backup_count = 5
+
+[demo]
+# Serves /console and /dashboard. Keep false in production.
+enabled = false
