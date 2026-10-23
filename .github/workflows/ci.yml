@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  testes:
+  tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -19,14 +19,20 @@ jobs:
       - uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
         with:
           python-version: "3.13"
-      - name: Dependências
-        run: uv sync
-      - name: Lint e formato
+      - name: Dependencies
+        run: uv sync --locked
+      - name: Lint and format
         run: uv run ruff check . && uv run ruff format --check .
-      - name: Testes
+      - name: Tests (coverage floor in pyproject.toml)
         run: uv run pytest --cov --cov-report=term-missing
+      - name: Evidence is reproducible
+        run: uv run python tasks.py evidence-check
+      - name: Health check
+        run: uv run python -m whatsapp_attendant health
+      - name: Example config is valid
+        run: uv run python -m whatsapp_attendant check-config config.example.toml
 
-  segredos:
+  secrets:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -54,7 +60,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Commits convencionais
+      - name: Conventional commits
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -62,6 +68,6 @@ jobs:
           bad=0
           for s in $(git log --no-merges --format=%H "$BASE_SHA..$HEAD_SHA"); do
             m=$(git log -1 --format=%s "$s")
-            echo "$m" | grep -Eq '^(feat|fix|docs|chore|refactor|test|ci|build|perf|style|revert)(\([a-z0-9._-]+\))?!?: .+' || { echo "fora do padrão: $m"; bad=1; }
+            echo "$m" | grep -Eq '^(feat|fix|docs|chore|refactor|test|ci|build|perf|style|revert)(\([a-z0-9._-]+\))?!?: .+' || { echo "not conventional: $m"; bad=1; }
           done
           exit $bad
