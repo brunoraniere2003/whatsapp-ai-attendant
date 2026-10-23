@@ -58,8 +58,8 @@ TEXT = {
         "kicker": "Evaluation report",
         "sub": (
             "Demo case with fictional data. Seed {seed}, {conv} simulated conversations, "
-            "intent accuracy measured on {test} held-out phrases that repeat no training or dev "
-            "phrase."
+            "{test} held-out test phrases ({test_in} in scope, {test_oos} off topic) that "
+            "repeat no training or dev phrase."
         ),
         "k_resolved": "conversations resolved with the right answer",
         "k_resolved_d": "{n} of {total}, no human involved",
@@ -147,8 +147,8 @@ TEXT = {
         "kicker": "Relatório de avaliação",
         "sub": (
             "Case demonstrativo com dados fictícios. Semente {seed}, {conv} conversas simuladas, "
-            "acerto de intenção medido em {test} frases de teste que não repetem nenhuma frase de "
-            "treino ou de desenvolvimento."
+            "{test} frases de teste ({test_in} no escopo, {test_oos} fora do assunto) que não "
+            "repetem nenhuma frase de treino ou de desenvolvimento."
         ),
         "k_resolved": "das conversas resolvidas com a resposta certa",
         "k_resolved_d": "{n} de {total}, sem atendente",
@@ -565,7 +565,7 @@ def render(
 <title>{_e(t["title"])}: {_e(t["kicker"])}</title><style>{asset("report.css")}</style></head>
 <body class="{view}">
 <header><div class="htext"><div class="kicker">{_e(t["kicker"])}</div><h1>{_e(t["title"])}</h1>
-<p>{_e(t["sub"].format(seed=metrics["seed"], conv=total, test=test_phrases))}</p></div>
+<p>{_e(t["sub"].format(seed=metrics["seed"], conv=total, test=test_phrases, **fields))}</p></div>
 {_nav(lang, view) if nav else ""}</header>
 <main>
 <section class="kpis">{kpi_html}</section>

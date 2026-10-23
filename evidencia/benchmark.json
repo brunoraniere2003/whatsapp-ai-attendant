@@ -3,7 +3,7 @@
   "python": "3.13.16",
   "machine": "AMD64",
   "messages": 928,
-  "latency_p50_ms": 0.151,
-  "latency_p95_ms": 0.225,
-  "latency_max_ms": 2.945
+  "latency_p50_ms": 0.144,
+  "latency_p95_ms": 0.195,
+  "latency_max_ms": 0.346
 }
