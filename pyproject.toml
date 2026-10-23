@@ -1,12 +1,22 @@
 [project]
 name = "whatsapp-ai-attendant"
-version = "0.1.0"
+dynamic = ["version"]
 description = "WhatsApp Cloud API webhook with a local intent engine, slot filling, human handoff and a learning queue"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Bruno Raniere" }]
 requires-python = ">=3.13"
 dependencies = [
     "fastapi[standard]>=0.115",
+    "httpx>=0.28",
 ]
+
+[project.optional-dependencies]
+llm = ["anthropic>=1.0"]
+
+[project.scripts]
+whatsapp-attendant = "whatsapp_attendant.cli:main"
 
 [dependency-groups]
 dev = [
@@ -14,11 +24,15 @@ dev = [
     "pytest-cov>=7.0",
     "ruff>=0.17",
     "httpx>=0.28",
+    "anthropic>=1.0",
 ]
 
 [build-system]
 requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/whatsapp_attendant/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/whatsapp_attendant"]
@@ -31,7 +45,12 @@ target-version = "py313"
 select = ["E", "F", "I", "B", "UP", "S", "SIM"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101"]
+"tests/*" = ["S101", "S105", "S106", "S311"]
+# Seeded pseudo-random numbers drive the simulation, not security.
+"src/whatsapp_attendant/simulation.py" = ["S311"]
+# The image builder runs a fixed local Chromium binary and the local server.
+"vitrine/src/*" = ["S603", "S607", "S310"]
+"tasks.py" = ["S603", "S607"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -39,8 +58,10 @@ addopts = "-q"
 
 [tool.coverage.run]
 source = ["src"]
+branch = true
 
 [tool.coverage.report]
-fail_under = 85
+fail_under = 90
 show_missing = true
-exclude_also = ['if __name__ == "__main__":']
+skip_covered = true
+exclude_also = ['if __name__ == "__main__":', "raise NotImplementedError", "\\.\\.\\."]

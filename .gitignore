@@ -1,14 +1,26 @@
+# Python
 __pycache__/
 *.py[cod]
 .venv/
-.pytest_cache/
-.ruff_cache/
-.coverage
-htmlcov/
+*.egg-info/
 dist/
 build/
-*.egg-info/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+coverage.json
+
+# Runtime
+logs/
+*.log
+
+# Secrets
 .env
 .env.*
-*.xlsx
-!dados_ficticios/*.xlsx

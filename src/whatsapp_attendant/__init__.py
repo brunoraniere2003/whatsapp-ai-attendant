@@ -1,12 +1,3 @@
-"""Pacote whatsapp-ai-attendant. Nome e descrição vêm do pyproject.toml (metadados)."""
+"""AI WhatsApp Attendant: Cloud API webhook, intent engine, slot filling and human handoff."""
 
-from importlib.metadata import PackageNotFoundError, metadata
-
-__version__ = "0.1.0"
-
-try:
-    _meta = metadata("whatsapp-ai-attendant")
-    NOME = _meta["Name"]
-    DESCRICAO = _meta.get("Summary", "")
-except PackageNotFoundError:  # pragma: no cover
-    NOME, DESCRICAO = "whatsapp-ai-attendant", ""
+__version__ = "1.0.0"
