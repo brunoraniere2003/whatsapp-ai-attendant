@@ -1,0 +1,64 @@
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{font-family:"Segoe UI",system-ui,Arial,sans-serif;background:#f3f4f1;color:#111b21;
+font-size:14px;display:flex;flex-direction:column;min-height:100vh}
+.top{height:60px;flex:none;background:#0d3b3c;color:#fff;display:flex;align-items:center;
+padding:0 24px;gap:14px}
+.logo{width:30px;height:30px;border-radius:8px;background:#25b07a;display:grid;place-items:center;
+font-weight:700}
+.top h1{font-size:17px;margin:0;font-weight:600}.top h1 span{opacity:.7;font-weight:400}
+.chips{margin-left:auto;display:flex;gap:8px}
+.chip{background:rgba(255,255,255,.12);border-radius:14px;padding:5px 12px;font-size:12.5px}
+.wrap{flex:1;display:grid;grid-template-columns:300px 1fr 430px;gap:16px;padding:16px;min-height:0}
+.panel{background:#fff;border:1px solid #e4e5e1;border-radius:10px;overflow:hidden;display:flex;
+flex-direction:column;min-height:0}
+.panel h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#54656f;margin:0;
+padding:14px 16px 8px}
+.scen a{display:block;padding:11px 16px;border-top:1px solid #f0f1ee;color:inherit;
+text-decoration:none}
+.scen a.on{background:#e7f5ef;border-left:3px solid #14786f;padding-left:13px}
+.scen b{display:block;font-size:14px;font-weight:600}.scen small{color:#667781;font-size:12.5px}
+.tag{display:inline-block;margin-top:5px;font-size:11.5px;border-radius:10px;padding:1px 8px}
+.tag-ok{background:#e2f4ea;color:#0f6b3f}.tag-hand{background:#fdeee6;color:#9a3f12}
+.chat{background:#efeae2}
+.chat .head{background:#f0f2f5;border-bottom:1px solid #e4e5e1;display:flex;align-items:center;
+gap:12px;padding:10px 16px}
+.avatar{width:38px;height:38px;border-radius:50%;background:#14786f;color:#fff;display:grid;
+place-items:center;font-weight:700}
+.head b{display:block}.head small{color:#667781}
+.msgs{flex:1;overflow-y:auto;padding:16px 22px;display:flex;flex-direction:column;gap:6px}
+.b{max-width:78%;display:flex;flex-direction:column}
+.b p{margin:0;padding:7px 11px;border-radius:8px;line-height:1.38;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.b.in{align-self:flex-start}.b.in p{background:#fff}
+.b.out{align-self:flex-end;align-items:flex-end}.b.out p{background:#d9fdd3}
+.b small{font-size:11.5px;color:#667781;margin:2px 4px 0}
+.sys{align-self:center;background:#fff8d6;color:#6b5a10;font-size:12px;border-radius:7px;
+padding:4px 10px;margin:4px 0}
+form{display:flex;gap:10px;padding:10px 14px;background:#f0f2f5;border-top:1px solid #e4e5e1}
+input{flex:1;border:1px solid #d5d8d3;border-radius:20px;padding:10px 16px;font-size:14px}
+button{background:#14786f;color:#fff;border:0;border-radius:20px;padding:0 20px;font-size:14px;
+font-weight:600;cursor:pointer}
+.side{overflow-y:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;color:#54656f;font-weight:600;padding:6px 16px;border-bottom:1px solid #eceee9}
+td{padding:6px 16px;border-bottom:1px solid #f2f3f0}
+.act{font-size:11.5px;border-radius:9px;padding:1px 8px;background:#eef1f4;color:#36424a}
+.act-answer{background:#e2f4ea;color:#0f6b3f}.act-handoff{background:#fdeee6;color:#9a3f12}
+.act-not_understood,.act-reask_slot{background:#fff3d6;color:#7a5a00}
+.act-ask_slot{background:#e4eefc;color:#1c4f95}
+.state{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 16px 12px}
+.state div{background:#f6f7f5;border-radius:8px;padding:8px 10px}
+.state span{display:block;font-size:11.5px;color:#667781}.state b{font-size:13.5px}
+.queue{padding:0 16px 14px;margin:0;list-style:none}
+.queue li{border-left:3px solid #eda100;background:#fffaf0;padding:6px 10px;margin-bottom:6px;
+border-radius:0 6px 6px 0;font-size:13px}
+.queue small{display:block;color:#667781}
+@media (max-width:1100px){.wrap{grid-template-columns:1fr}}
+.note{color:#667781;font-size:12.5px;line-height:1.45;padding:12px 16px;margin:0;border-top:1px solid #f0f1ee}
+.kb{display:flex;flex-wrap:wrap;gap:6px;padding:2px 16px 4px}
+.kb span{font-size:12.5px;border-radius:12px;padding:3px 10px;background:#f3f4f1}
+.kb b{color:#36424a}
+.kb span::before,.legend i{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;
+margin-right:6px;background:var(--c)}
+.k-answers{--c:#1baf7a}.k-slot{--c:#2a78d6}.k-handoff{--c:#eb6834}
+.legend{font-size:12px;color:#667781;padding:6px 16px 14px;margin:0}
+.legend i{margin:0 4px 0 10px}.legend i:first-child{margin-left:0}

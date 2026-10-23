@@ -1,0 +1,70 @@
+:root{--surface:#fcfcfb;--card:#ffffff;--ink:#0b0b0b;--ink2:#52514e;--muted:#7c7b76;
+--line:#e8e7e3;--accent:#0f5c55;--accent2:#14786f;--bubble-in:#ffffff;--bubble-out:#dcf3e6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface);color:var(--ink);
+font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;font-size:15px;line-height:1.45}
+header{background:linear-gradient(120deg,#0d3b3c,#14786f);color:#fff;padding:26px 56px 24px;
+display:flex;align-items:flex-end;gap:24px}
+header .htext{flex:1}
+header .kicker{text-transform:uppercase;letter-spacing:.12em;font-size:12px;opacity:.85}
+header h1{margin:4px 0 6px;font-size:30px;font-weight:700}
+header p{margin:0;max-width:1100px;color:#e2f1ee;font-size:15px}
+main{padding:22px 56px 40px;max-width:1600px;margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.kpi b{display:block;font-size:34px;line-height:1.1;color:var(--accent);font-weight:700}
+.kpi span{display:block;font-size:14px;color:var(--ink);margin-top:4px}
+.kpi small{display:block;font-size:13px;color:var(--muted);margin-top:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px}
+.card h3{margin:0;font-size:16px}
+.card p.s{margin:2px 0 12px;color:var(--ink2);font-size:13px}
+.chart{width:100%;height:auto;display:block}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .tick{fill:var(--muted);font-size:12px}
+.chart .label{fill:var(--ink);font-size:13px}
+.chart .value{fill:var(--ink2);font-size:13px;font-weight:600}
+.legend{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px}
+.legend li{display:grid;grid-template-columns:14px 1fr 48px 60px;align-items:center;gap:10px;
+font-size:13.5px}
+.legend .sw{width:14px;height:14px;border-radius:3px}
+.legend b{text-align:right}.muted{color:var(--muted);text-align:right}
+table.kv thead{display:none}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin-top:6px}
+th{text-align:left;color:var(--ink2);font-weight:600;border-bottom:1px solid var(--line);
+padding:6px 8px}
+td{padding:6px 8px;border-bottom:1px solid var(--line)}
+h2{font-size:18px;margin:30px 0 8px}
+ul.method{margin:6px 0 0;padding-left:20px;color:var(--ink2)}
+.samples{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.sample{background:#eef3ef;border-radius:10px;padding:12px 14px}
+.sample h4{margin:0 0 8px;font-size:13.5px;color:var(--ink2)}
+.msg{display:flex;margin:6px 0}.msg span{padding:7px 11px;border-radius:9px;max-width:85%;
+font-size:13.5px;box-shadow:0 1px 0 rgba(0,0,0,.06)}
+.msg.in span{background:var(--bubble-in)}
+.msg.out{flex-direction:column;align-items:flex-end}.msg.out span{background:var(--bubble-out)}
+.msg small{font-size:11.5px;color:var(--muted);margin-top:2px}
+footer{color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);margin-top:30px;
+padding-top:12px}
+@media (max-width:900px){.kpis,.grid2,.samples{grid-template-columns:1fr}
+header,main{padding-left:16px;padding-right:16px}}
+@media print{header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.card,.kpi,.sample{break-inside:avoid}}
+.flow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.flow div{background:#f6f7f5;border-radius:8px;padding:10px 12px}
+.flow b{font-size:20px;color:var(--ink)}.flow span{margin-left:6px;font-size:13.5px}
+.flow small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.tabs{display:flex;gap:6px;flex:none}
+.tabs a{color:#e2f1ee;text-decoration:none;font-size:13.5px;padding:6px 12px;border-radius:16px;
+background:rgba(255,255,255,.1)}
+.tabs a.on{background:#fff;color:#0d3b3c;font-weight:600}
+body.overview header{padding:16px 40px 14px}body.overview header h1{font-size:25px;margin:2px 0}
+body.overview header p{font-size:14px}
+body.overview main{padding:14px 40px 0}
+body.overview .kpis{gap:14px}body.overview .kpi{padding:12px 16px}
+body.overview .kpi b{font-size:30px}
+body.overview .grid2{gap:14px;margin-top:14px}
+body.overview .card{padding:12px 18px}
+body.overview .card p.s{margin-bottom:8px}
+body.overview .flow{margin-top:12px;gap:8px}body.overview .flow div{padding:8px 12px}
+body.overview table{font-size:13px}body.overview td,body.overview th{padding:5px 8px}
