@@ -1,0 +1,98 @@
+# Dev split: paraphrases used ONLY to choose the confidence threshold and to guide edits of the
+# knowledge base. Never used to report results. Written as customers type (no accents,
+# abbreviations, small typos). No phrase may repeat a training example or a test phrase.
+
+[phrases]
+greeting = [
+    "oii",
+    "boa tarde, td bem?",
+    "olá bom dia",
+    "oi pessoal",
+    "alô",
+    "bom diaa",
+    "ola, quem fala?",
+]
+order_status = [
+    "meu pedido nao chegou ainda",
+    "qual a situação do meu pedido",
+    "cade minha compra",
+    "quero rastrear a entrega",
+    "o pedido ja foi enviado?",
+    "previsão de entrega do meu pedido",
+    "comprei semana passada e nada de chegar",
+]
+invoice_copy = [
+    "preciso da segunda via",
+    "pode me mandar o boleto atualizado?",
+    "meu boleto sumiu",
+    "gera outro boleto pra mim",
+    "cadê a nota fiscal do meu pedido",
+    "boleto vencido, quero um novo",
+    "me envia a fatura de novo",
+]
+payment_status = [
+    "paguei ontem a noite",
+    "ja fiz o pix",
+    "o boleto foi pago, podem conferir?",
+    "efetuei o pagamento hoje",
+    "consta em aberto mas eu paguei",
+    "vcs receberam o pagamento?",
+    "o pagamento no cartão passou?",
+]
+return_exchange = [
+    "o produto chegou com defeito",
+    "quero devolver o que comprei",
+    "veio a cor errada",
+    "como funciona a troca?",
+    "o tênis ficou pequeno, quero trocar",
+    "produto danificado na entrega",
+    "quero meu dinheiro de volta, o produto não presta",
+]
+cancel_order = [
+    "quero cancelar",
+    "cancela minha compra",
+    "desisti, quero cancelar o pedido",
+    "como faço o cancelamento?",
+    "fiz o pedido errado, da pra cancelar?",
+    "nao quero mais, pode cancelar",
+    "cancelar pedido de ontem",
+]
+business_hours = [
+    "que horas vcs abrem",
+    "atendem aos sabados?",
+    "qual o horario de vcs",
+    "vcs funcionam domingo",
+    "ate que horas atende hoje",
+    "abre no feriado?",
+    "horário do suporte",
+]
+human_agent = [
+    "quero falar com atendente",
+    "me passa pra uma pessoa",
+    "nao quero robo",
+    "tem alguem pra me atender?",
+    "transfere pra um humano por favor",
+    "quero conversar com gente de verdade",
+    "chama um atendente",
+]
+goodbye = [
+    "obrigada!",
+    "valeu, era isso",
+    "ok obrigado",
+    "tchau, ate mais",
+    "resolvido, vlw",
+    "brigado",
+    "perfeito, obrigado",
+]
+out_of_scope = [
+    "quanto custa o frete para o acre",
+    "vocês vendem geladeira?",
+    "qual o cnpj da empresa",
+    "tem vaga de emprego?",
+    "receita de bolo de cenoura",
+    "quem ganhou o jogo ontem",
+    "quero cancelar minha conta de luz",
+    "qual a senha do wifi",
+    "me indica um filme",
+    "vocês aceitam bitcoin?",
+]

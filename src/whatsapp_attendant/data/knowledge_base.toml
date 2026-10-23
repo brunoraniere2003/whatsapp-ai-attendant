@@ -1,0 +1,193 @@
+# Knowledge base of the fictional store used by the demo (Brazilian Portuguese).
+#
+# Edit this file to teach the attendant: add examples to an intent, add a new intent or change a
+# reply. The service validates it at startup (repeated names, fewer than 3 examples, unknown
+# placeholders and undefined slots are errors). Replies may use these placeholders:
+#   {store}, {hours}                      always available
+#   {order_number}                        intents with slot = "order_number"
+#   {order_status}, {payment_status}      intents with slot = "order_number" (order backend)
+
+[store]
+name = "Loja Exemplo"
+hours = "de segunda a sexta, das 8h às 18h"
+
+[replies]
+not_understood = "Não consegui identificar o assunto. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, confirmação de pagamento, troca, cancelamento ou horário de atendimento."
+handoff = "Vou transferir a conversa para um atendente, que responde {hours}. O histórico fica registrado e você não precisa repetir nada."
+unsupported = "Por enquanto consigo ler apenas mensagens de texto. Pode escrever sua dúvida?"
+
+[slots.order_number]
+pattern = '(?<!\d)\d{6}(?!\d)'
+ask = "Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra."
+invalid = "Não encontrei um número de pedido com 6 dígitos na mensagem. Pode conferir e enviar de novo?"
+
+[[intents]]
+name = "greeting"
+description = "Saudação"
+examples = [
+    "oi",
+    "olá",
+    "bom dia",
+    "boa tarde",
+    "boa noite",
+    "oi, tudo bem?",
+    "olá, preciso de ajuda",
+    "e aí",
+    "opa",
+    "oi, boa tarde",
+    "bom dia, alguém pode me ajudar?",
+    "oie",
+]
+reply = "Olá, aqui é o atendimento da {store}. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário. Como posso ajudar?"
+
+[[intents]]
+name = "order_status"
+description = "Status do pedido"
+slot = "order_number"
+examples = [
+    "onde está meu pedido",
+    "quero saber o status da entrega",
+    "meu pedido já saiu para entrega?",
+    "rastrear pedido",
+    "quando chega minha compra",
+    "cadê minha encomenda",
+    "qual o prazo de entrega",
+    "meu pedido está atrasado",
+    "código de rastreio",
+    "status do pedido",
+    "a entrega ainda não chegou",
+    "acompanhar meu pedido",
+]
+reply = "O pedido {order_number} está {order_status}. O código de rastreio também foi enviado para o seu e-mail."
+
+[[intents]]
+name = "invoice_copy"
+description = "Segunda via de boleto ou nota fiscal"
+slot = "order_number"
+examples = [
+    "quero a segunda via do boleto",
+    "preciso do boleto de novo",
+    "me manda o boleto",
+    "perdi o boleto",
+    "o boleto venceu, preciso de outro",
+    "pode gerar outro boleto",
+    "quero a nota fiscal da compra",
+    "preciso da nota fiscal",
+    "segunda via da fatura",
+    "como pego a 2ª via",
+    "reenviar o boleto atualizado",
+    "não recebi o boleto por e-mail",
+]
+reply = "Pronto: a segunda via do boleto do pedido {order_number}, com vencimento atualizado, e a nota fiscal foram enviadas para o e-mail cadastrado. O boleto vale por 3 dias úteis."
+
+[[intents]]
+name = "payment_status"
+description = "Confirmação de pagamento"
+slot = "order_number"
+examples = [
+    "já paguei",
+    "fiz o pagamento ontem",
+    "paguei o boleto mas ainda consta em aberto",
+    "vocês receberam meu pix?",
+    "quero confirmar o pagamento",
+    "o pagamento foi aprovado?",
+    "paguei hoje de manhã",
+    "o pagamento caiu?",
+    "tenho o comprovante de pagamento",
+    "meu cartão foi recusado?",
+    "o pedido ainda aparece aguardando pagamento",
+    "o pix já foi identificado?",
+]
+reply = "Consultei o pedido {order_number}: {payment_status}. Pix é confirmado em minutos e boleto em até 2 dias úteis."
+
+[[intents]]
+name = "return_exchange"
+description = "Troca ou devolução"
+slot = "order_number"
+examples = [
+    "quero trocar um produto",
+    "como faço para devolver",
+    "o produto veio com defeito",
+    "veio o tamanho errado",
+    "quero devolver a compra",
+    "posso trocar por outro modelo?",
+    "chegou quebrado",
+    "quero fazer uma troca",
+    "o item veio diferente do anúncio",
+    "qual o prazo para devolução?",
+    "me arrependi da compra",
+    "solicitar devolução",
+]
+reply = "Abri a solicitação de troca ou devolução do pedido {order_number}. A etiqueta de postagem gratuita chega no seu e-mail e, quando o produto chegar ao nosso centro, a troca ou o reembolso sai em até 5 dias úteis."
+
+[[intents]]
+name = "cancel_order"
+description = "Cancelamento de pedido"
+slot = "order_number"
+examples = [
+    "quero cancelar meu pedido",
+    "cancelar a compra",
+    "desisti do pedido",
+    "como cancelo?",
+    "não quero mais o produto, quero cancelar",
+    "dá para cancelar antes de enviar?",
+    "cancela meu pedido por favor",
+    "comprei errado, quero cancelar",
+    "cancelamento do pedido",
+    "quero o estorno do pedido",
+    "preciso cancelar uma compra",
+    "posso cancelar o pedido que fiz hoje?",
+]
+reply = "O pedido {order_number} foi marcado para cancelamento. Se ele ainda não saiu do estoque, o estorno volta para a mesma forma de pagamento em até 7 dias úteis."
+
+[[intents]]
+name = "business_hours"
+description = "Horário de atendimento"
+examples = [
+    "qual o horário de atendimento",
+    "vocês abrem sábado?",
+    "que horas fecha",
+    "horário de funcionamento",
+    "atendem no domingo?",
+    "até que horas vocês atendem",
+    "funciona feriado?",
+    "qual o horário da loja",
+    "a que horas o atendimento abre",
+    "tem atendimento à noite?",
+]
+reply = "O atendimento humano funciona {hours}. Este canal automático responde 24 horas, todos os dias."
+
+[[intents]]
+name = "human_agent"
+description = "Pedido de atendente humano"
+handoff = true
+examples = [
+    "quero falar com uma pessoa",
+    "me transfere para um atendente",
+    "quero um humano",
+    "falar com atendente",
+    "não quero falar com robô",
+    "chama alguém",
+    "preciso de um atendente",
+    "quero falar com o responsável",
+    "tem alguém aí de verdade?",
+    "atendimento humano por favor",
+]
+reply = "Certo, vou transferir a conversa para um atendente, que responde {hours}. O histórico fica registrado e você não precisa repetir nada."
+
+[[intents]]
+name = "goodbye"
+description = "Encerramento"
+examples = [
+    "obrigado",
+    "valeu",
+    "tchau",
+    "era só isso",
+    "muito obrigado pela ajuda",
+    "ok, obrigada",
+    "resolvido, obrigado",
+    "até mais",
+    "beleza, valeu",
+    "show, obrigado",
+]
+reply = "Eu que agradeço. Se precisar de algo mais, é só mandar mensagem por aqui."
