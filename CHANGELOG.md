@@ -6,7 +6,12 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Changed
 
+- `vitrine/src/build.py` takes the browser from `CHROME_PATH` or the first of `chromium`, `chrome` or `msedge` on the PATH, and stops with exit 2 when there is none; there is no machine-specific default path any more.
 - Phone numbers in tests, the README and the demo and simulation generators are numbers that cannot exist (`55110…`: a Brazilian subscriber number never starts with 0). The test message id encodes the fictional `16505550123` and the demo-host test uses the documentation address `192.0.2.10`. Masked phones, `metricas.json`, the reports and the transcripts are byte-identical.
+
+### Added
+
+- `.env.example` lists every environment variable with an empty value; the README documents `CHROME_PATH`.
 
 ## [1.1.0] - 2026-10-23
 

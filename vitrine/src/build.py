@@ -8,7 +8,8 @@
   the conversation console and the evaluation dashboard.
 - evidencia/report.pdf, evidencia/relatorio.pdf and evidencia/previa.png from the HTML reports.
 
-Chromium path: $CHROME_PATH, or the default path below. Fails if any image is not 1600x900.
+Chromium path: $CHROME_PATH, or the first of chromium, chrome or msedge found on the PATH; with
+neither it stops and asks for CHROME_PATH. Fails if any image is not 1600x900.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from __future__ import annotations
 import html
 import os
 import secrets
+import shutil
 import socket
 import struct
 import subprocess
@@ -28,9 +30,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "vitrine"
 EVIDENCE = ROOT / "evidencia"
-DEFAULT_CHROME = "/usr/bin/chromium"
-CHROME = os.environ.get("CHROME_PATH") or DEFAULT_CHROME
+# Chromium-based browsers looked up on the PATH when $CHROME_PATH is not set.
+CHROME_NAMES = ("chromium", "chrome", "msedge")
 SIZE = (1600, 900)
+
+
+def find_chrome() -> str | None:
+    """$CHROME_PATH when set, else the first of CHROME_NAMES on the PATH, else None."""
+    explicit = os.environ.get("CHROME_PATH")
+    if explicit:
+        return explicit
+    return next((found for name in CHROME_NAMES if (found := shutil.which(name))), None)
+
+
+CHROME = find_chrome()
 
 COVERS = {
     "capa-pt.png": {
@@ -161,8 +174,9 @@ def evidence_files() -> None:
 
 
 def main() -> int:
-    if not Path(CHROME).is_file():
-        print(f"Chromium not found: {CHROME} (set $CHROME_PATH)")
+    if CHROME is None or not Path(CHROME).is_file():
+        tried = CHROME or f"none of {', '.join(CHROME_NAMES)} is on the PATH"
+        print(f"Chromium not found: {tried}. Set CHROME_PATH to a Chromium-based browser.")
         return 2
     with tempfile.TemporaryDirectory() as folder:
         tmp = Path(folder)

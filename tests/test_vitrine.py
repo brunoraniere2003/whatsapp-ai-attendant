@@ -1,5 +1,6 @@
 """Portfolio cards and images (CA-13): the same rules the factory gate applies."""
 
+import importlib.util
 import json
 import re
 import struct
@@ -90,3 +91,31 @@ def test_ca_13_images_are_1600x900_png(name):
 def test_image_generator_is_kept_in_the_repository():
     source = (VITRINE / "src" / "build.py").read_text(encoding="utf-8")
     assert all(name in source for name in IMAGES)
+
+
+def _build_script():
+    spec = importlib.util.spec_from_file_location("vitrine_build", VITRINE / "src" / "build.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_image_generator_finds_chromium_from_the_environment_or_the_path(monkeypatch):
+    build = _build_script()
+    monkeypatch.setenv("CHROME_PATH", "/opt/browser/chrome")
+    assert build.find_chrome() == "/opt/browser/chrome"
+    monkeypatch.delenv("CHROME_PATH")
+    on_path = {"msedge": "/usr/bin/msedge"}
+    monkeypatch.setattr(build.shutil, "which", on_path.get)
+    assert build.find_chrome() == "/usr/bin/msedge"
+    on_path["chromium"] = "/usr/bin/chromium"
+    assert build.find_chrome() == "/usr/bin/chromium"
+    on_path.clear()
+    assert build.find_chrome() is None
+
+
+def test_image_generator_stops_without_chromium(monkeypatch, capsys):
+    build = _build_script()
+    monkeypatch.setattr(build, "CHROME", None)
+    assert build.main() == 2
+    assert "CHROME_PATH" in capsys.readouterr().out

@@ -55,12 +55,15 @@ uv run python -m whatsapp_attendant health --url http://127.0.0.1:8000   # exit 
 
 Tunables live in a TOML file; [config.example.toml](config.example.toml) documents every key and is tested to equal the built-in defaults. Pass it with `--config` or `ATTENDANT_CONFIG`. Unknown keys and out-of-range values stop the service with a message that names the key (`python -m whatsapp_attendant check-config FILE`). The knowledge base is [knowledge_base.toml](src/whatsapp_attendant/data/knowledge_base.toml), validated the same way.
 
+[.env.example](.env.example) lists every variable with an empty value.
+
 | Variable | Used for | Without it |
 |---|---|---|
 | `WA_VERIFY_TOKEN` | webhook verification | verification always answers 403 |
 | `WA_APP_SECRET` | HMAC check of every event | the webhook answers 503 and `/health` fails; `whatsapp.allow_unsigned = true` accepts unsigned events, for local tests only |
 | `WA_ACCESS_TOKEN`, `WA_PHONE_NUMBER_ID` | sending through the Graph API | replies are recorded in memory, nothing is sent; the token without `WA_APP_SECRET` stops the service at startup |
 | `ANTHROPIC_API_KEY` | optional LLM second layer (install it with `uv sync --extra llm`) | local engine only, no outbound call |
+| `CHROME_PATH` | Chromium-based browser for the portfolio images and PDFs (`python vitrine/src/build.py`) | the first of `chromium`, `chrome` or `msedge` on the PATH; with none, the image build stops with exit 2 |
 
 ## Architecture
 
