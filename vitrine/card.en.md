@@ -4,7 +4,7 @@ An online store gets the same questions on WhatsApp all day: where is my order, 
 
 It reads messages typed on a phone (no accents, typos, slang) because the classifier also scores character trigrams. When the order number is missing, it asks for it. After two misunderstood messages in a row, or when the customer asks for a person, the chat goes to a human agent. Every misunderstood message lands in a learning queue.
 
-In 300 simulated conversations, the bot resolved 72.0% with the right answer and handed 7.0% to a person. I counted confident wrong answers as failures. Intent accuracy was 86.8% on 121 phrases never used in training. The webhook checks the Meta HMAC signature and ignores redelivered events. Logs keep no personal data. An optional Claude layer only sees what the local engine rejects.
+In 300 simulated conversations, the bot resolved 80.7% with the right answer and handed 7.3% to a person. I counted confident wrong answers as failures. Intent accuracy was 85.3% on 109 phrases never used in training. The webhook checks the Meta HMAC signature and ignores redelivered events. Logs keep no personal data. An optional Claude layer only sees what the local engine rejects.
 
 Demo case with fictional data.
 

@@ -13,7 +13,7 @@ from pathlib import Path
 
 from . import __version__, report
 from .config import Settings
-from .evaluation import evaluate, load_split, overlaps, sweep_thresholds
+from .evaluation import NEAR_DUPLICATE, evaluate, load_split, overlaps, sweep_thresholds
 from .knowledge import KnowledgeBase, load_knowledge_base
 from .metrics import percentile
 from .nlu import TfidfClassifier
@@ -47,7 +47,7 @@ def build(seed: int = 42, conversations: int = 300, settings: Settings | None = 
     settings = settings or Settings()
     kb = load_knowledge_base(settings.knowledge_base)
     dev, test = load_split("dev", kb), load_split("test", kb)
-    leaks = overlaps(kb, dev, test)
+    leaks = overlaps(kb, dev, test, char_weight=settings.engine.char_ngram_weight)
     if leaks:
         raise ValueError(f"evaluation splits overlap with training or each other: {leaks}")
     classifier = TfidfClassifier(
@@ -56,10 +56,22 @@ def build(seed: int = 42, conversations: int = 300, settings: Settings | None = 
         char_weight=settings.engine.char_ngram_weight,
     )
     selection = sweep_thresholds(classifier, dev)
+    if selection["chosen"] != settings.engine.confidence_threshold:  # RQ-27
+        raise ValueError(
+            f"configured confidence threshold {settings.engine.confidence_threshold} is not the "
+            f"one chosen on the dev split ({selection['chosen']}): update config.py and "
+            "config.example.toml"
+        )
     dev_result = evaluate(classifier.predict, dev, kb)
     test_result = evaluate(classifier.predict, test, kb)
     sim = simulate(kb, settings, test, SimulationConfig(conversations=conversations, seed=seed))
     public_sim = {k: v for k, v in sim.items() if not k.startswith("_")}
+    impatient = simulate(
+        kb,
+        settings,
+        test,
+        SimulationConfig(conversations=conversations, seed=seed, rephrase_after_miss=False),
+    )
     return {
         "schema_version": SCHEMA_VERSION,
         "project": "whatsapp-ai-attendant",
@@ -71,6 +83,7 @@ def build(seed: int = 42, conversations: int = 300, settings: Settings | None = 
             "switch_threshold": settings.engine.switch_threshold,
             "max_failed_turns": settings.dialogue.max_failed_turns,
             "order_number_digits": _digits(kb),
+            "leakage_cosine": NEAR_DUPLICATE,
             "llm_enabled": False,
         },
         "datasets": {
@@ -86,6 +99,13 @@ def build(seed: int = 42, conversations: int = 300, settings: Settings | None = 
         "dev": _summary(dev_result),
         "test": test_result,
         "simulation": public_sim,
+        # Same seed, customers who never rephrase after a rejection or a wrong confirmation.
+        "sensitivity": {
+            "without_rephrase_after_miss": {
+                "resolution_rate": impatient["resolution_rate"],
+                "outcomes": impatient["outcomes"],
+            }
+        },
         "_conversations": sim["_conversations"],
         "_latencies": sim["_latencies"],
         "_kb": kb,

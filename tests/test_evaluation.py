@@ -2,9 +2,11 @@ import pytest
 
 from whatsapp_attendant.config import Settings
 from whatsapp_attendant.evaluation import (
+    NEAR_DUPLICATE,
     DatasetError,
     Split,
     evaluate,
+    find_leaks,
     load_split,
     overlaps,
     parse_split,
@@ -21,7 +23,47 @@ def test_ca_12_splits_share_no_phrase_with_training_or_each_other(kb):
 
 def test_ca_12_overlap_detection_works(kb):
     leaky = Split("leaky", {"greeting": ("Oi!",)})
-    assert overlaps(kb, leaky) == ["oi"]
+    assert overlaps(kb, leaky) == ["leaky: 'Oi!' ~ train: 'oi' (same words)"]
+
+
+@pytest.mark.parametrize(
+    ("phrase", "twin"),
+    [
+        ("oi oi", "oi"),  # repetition
+        ("tchau tchau", "tchau"),
+        ("quero cancelar o pedido", "quero cancelar meu pedido"),  # stopwords only
+        ("atendente por favor", "preciso de um atendente"),
+        ("abrem sábado?", "vocês abrem sábado?"),
+        ("horário de atendimento por favor", "qual o horário de atendimento"),
+    ],
+)
+def test_ca_12_leakage_is_measured_on_what_the_model_sees(kb, phrase, twin):
+    (leak,) = find_leaks(kb, Split("test", {"greeting": (phrase,)}))
+    assert (leak.text, leak.other, leak.other_text, leak.reason) == (
+        phrase,
+        "train",
+        twin,
+        "same words",
+    )
+
+
+def test_ca_12_test_phrases_are_checked_against_dev_in_any_word_order(kb):
+    dev = Split("dev", {"order_status": ("meu pedido nao chegou ainda",)})
+    test = Split("test", {"order_status": ("meu pedido ainda nao chegou",)})
+    assert overlaps(kb, dev, test) == [
+        "test: 'meu pedido ainda nao chegou' ~ dev: 'meu pedido nao chegou ainda' (same words)"
+    ]
+    assert overlaps(kb, test) == []  # dev was the twin, not training
+
+
+def test_ca_12_near_duplicates_are_caught_by_cosine_and_paraphrases_pass(kb):
+    assert NEAR_DUPLICATE == 0.95
+    split = Split("test", {"invoice_copy": ("segunda via da faturas",)})
+    assert find_leaks(kb, split) == []  # cosine 0.77 with "segunda via da fatura"
+    (leak,) = find_leaks(kb, split, limit=0.7)
+    assert leak.other_text == "segunda via da fatura" and leak.reason.startswith("cosine 0.7")
+    paraphrase = Split("test", {"order_status": ("a transportadora sumiu com a encomenda",)})
+    assert overlaps(kb, paraphrase) == []
 
 
 def test_ca_12_default_threshold_is_the_one_chosen_on_dev(kb):
@@ -60,7 +102,13 @@ def test_evaluate_counts_misses_false_positives_and_rejections(kb):
 
 @pytest.mark.parametrize(
     "data",
-    [{"phrases": {"unknown_intent": ["x"]}}, {"other": {}}, {"phrases": ["x"]}],
+    [
+        {"phrases": {"unknown_intent": ["x"]}},
+        {"other": {}},
+        {"phrases": ["x"]},
+        {"phrases": {"greeting": "oi tudo bem"}},
+        {"phrases": {"greeting": ["oi", 3]}},
+    ],
 )
 def test_malformed_splits_are_rejected(kb, data):
     with pytest.raises(DatasetError):

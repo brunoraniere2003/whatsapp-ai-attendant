@@ -4,8 +4,13 @@
 # reply. The service validates it at startup (repeated names, fewer than 3 examples, unknown
 # placeholders and undefined slots are errors). Replies may use these placeholders:
 #   {store}, {hours}                      always available
-#   {order_number}                        intents with slot = "order_number"
+#   {order_number}                        intents with slot = "order_number", their confirm
+#                                         question and the slot's not_found reply
 #   {order_status}, {payment_status}      intents with slot = "order_number" (order backend)
+#
+# negation_terms: normalized word prefixes whose negation means "do not do this" ("não quero
+# mais cancelar", "não preciso de atendente"). Required for handoff intents and for intents with
+# a confirm question, which is asked (yes or no) before the reply.
 
 [store]
 name = "Loja Exemplo"
@@ -15,12 +20,14 @@ hours = "de segunda a sexta, das 8h às 18h"
 not_understood = "Não consegui identificar o assunto. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, confirmação de pagamento, troca, cancelamento ou horário de atendimento."
 handoff = "Vou transferir a conversa para um atendente, que responde {hours}. O histórico fica registrado e você não precisa repetir nada."
 unsupported = "Por enquanto consigo ler apenas mensagens de texto. Pode escrever sua dúvida?"
+declined = "Tudo bem, não fiz nenhuma alteração. Posso ajudar com status do pedido, segunda via de boleto ou nota fiscal, pagamento, troca, cancelamento ou horário."
 
 [slots.order_number]
 pattern = '(?<!\d)\d{6}(?!\d)'
 cue = 'pedido|n[º°o]\.?|n[uú]mero(?: do pedido)?(?: [eé])?|[eé] o'
 ask = "Para localizar o pedido, me informe o número dele. São 6 dígitos e ele está no e-mail de confirmação da compra."
 invalid = "Não encontrei um número de pedido com 6 dígitos na mensagem. Pode conferir e enviar de novo?"
+not_found = "Não encontrei o pedido {order_number} entre os pedidos deste WhatsApp. Pode conferir os 6 dígitos no e-mail de confirmação e enviar de novo?"
 
 [[intents]]
 name = "greeting"
@@ -132,6 +139,8 @@ reply = "Abri a solicitação de troca ou devolução do pedido {order_number}. 
 name = "cancel_order"
 description = "Cancelamento de pedido"
 slot = "order_number"
+negation_terms = ["cancel", "estorn"]
+confirm = "Confirma o cancelamento do pedido {order_number}? Responda sim ou não."
 examples = [
     "quero cancelar meu pedido",
     "cancelar a compra",
@@ -170,6 +179,7 @@ reply = "O atendimento humano funciona {hours}. Este canal automático responde 
 name = "human_agent"
 description = "Pedido de atendente humano"
 handoff = true
+negation_terms = ["atendent", "pessoa", "human", "gente", "gerente", "responsavel", "alguem", "transfer", "suporte"]
 examples = [
     "quero falar com uma pessoa",
     "me transfere para um atendente",

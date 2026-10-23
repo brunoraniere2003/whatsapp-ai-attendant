@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import string
 import tomllib
+import unicodedata
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
@@ -38,6 +39,7 @@ class _Replies(_Strict):
     not_understood: str = Field(min_length=1)
     handoff: str = Field(min_length=1)
     unsupported: str = Field(min_length=1)
+    declined: str = Field(min_length=1)  # the customer negated a guarded intent (RQ-35)
 
 
 class _Slot(_Strict):
@@ -45,12 +47,13 @@ class _Slot(_Strict):
     cue: str = ""  # words that introduce the value ("pedido", "nº"), masked with it
     ask: str = Field(min_length=1)
     invalid: str = Field(min_length=1)
+    not_found: str | None = Field(None, min_length=1)  # the backend refused the value (RQ-37)
 
     @field_validator("pattern", "cue")
     @classmethod
     def _compiles(cls, value: str) -> str:
         try:
-            re.compile(value)
+            re.compile(value, re.IGNORECASE)
         except re.error as exc:
             raise ValueError(f"invalid regular expression: {exc}") from exc
         return value
@@ -63,6 +66,10 @@ class _Intent(_Strict):
     reply: str = Field(min_length=1)
     slot: str | None = None
     handoff: bool = False
+    # Normalized word prefixes whose negation means "do not do this" (RQ-35): "cancel" catches
+    # "não quero cancelar"; they also count as a yes to the confirm question.
+    negation_terms: list[str] = []
+    confirm: str | None = Field(None, min_length=1)  # yes or no question before answering
 
 
 class _File(_Strict):
@@ -79,6 +86,7 @@ class Slot:
     ask: str
     invalid: str
     mask: re.Pattern[str] | None = None
+    not_found: str | None = None
 
     def find(self, text: str) -> str | None:
         match = self.pattern.search(text)
@@ -93,6 +101,8 @@ class Intent:
     reply: str
     slot: str | None = None
     handoff: bool = False
+    negation_terms: tuple[str, ...] = ()
+    confirm: str | None = None
 
 
 @dataclass(frozen=True)
@@ -104,6 +114,7 @@ class KnowledgeBase:
     unsupported_reply: str
     intents: tuple[Intent, ...]
     slots: dict[str, Slot]
+    declined_reply: str = ""
 
     def intent(self, name: str) -> Intent:
         for item in self.intents:
@@ -132,11 +143,23 @@ class KnowledgeBase:
         return text
 
 
+def normalize(text: str) -> str:
+    """Lowercase, no accents, no punctuation: the form the classifier and the rules read."""
+    decomposed = unicodedata.normalize("NFKD", text.lower())
+    plain = "".join(c for c in decomposed if not unicodedata.combining(c))
+    plain = re.sub(r"[^a-z0-9\s]", " ", plain)
+    return re.sub(r"\s+", " ", plain).strip()
+
+
 def _placeholders(template: str) -> set[str]:
     try:
         return {field for _, field, _, _ in string.Formatter().parse(template) if field}
     except ValueError as exc:
         raise KnowledgeBaseError(f"malformed template {template!r}: {exc}") from exc
+
+
+def _unknown(template: str | None, allowed: set[str] | frozenset[str]) -> list[str]:
+    return sorted(_placeholders(template) - allowed) if template else []
 
 
 def _check(data: _File) -> list[str]:
@@ -159,13 +182,31 @@ def _check(data: _File) -> list[str]:
         allowed = set(ALWAYS_AVAILABLE)
         if intent.slot:
             allowed |= {intent.slot} | BACKEND_FIELDS.get(intent.slot, frozenset())
-        unknown = _placeholders(intent.reply) - allowed
-        if unknown:
-            problems.append(f"{where}: unknown placeholders {sorted(unknown)}")
+        if unknown := _unknown(intent.reply, allowed):
+            problems.append(f"{where}: unknown placeholders {unknown}")
+        asked = set(ALWAYS_AVAILABLE) | ({intent.slot} if intent.slot else set())
+        if unknown := _unknown(intent.confirm, asked):
+            problems.append(f"{where}: unknown placeholders in confirm {unknown}")
+        bad = [t for t in intent.negation_terms if not t or normalize(t) != t or " " in t]
+        if bad:
+            problems.append(f"{where}: negation_terms must be single normalized words: {bad}")
+        if intent.handoff and not intent.negation_terms:
+            problems.append(f"{where}: a handoff intent needs negation_terms (RQ-35)")
+        if intent.confirm and not intent.negation_terms:
+            problems.append(f"{where}: a confirm question needs negation_terms (RQ-35)")
     for name, template in data.replies.model_dump().items():
-        unknown = _placeholders(template) - ALWAYS_AVAILABLE
-        if unknown:
-            problems.append(f"reply {name!r}: unknown placeholders {sorted(unknown)}")
+        if unknown := _unknown(template, ALWAYS_AVAILABLE):
+            problems.append(f"reply {name!r}: unknown placeholders {unknown}")
+    for name, slot in data.slots.items():
+        for part, allowed in (
+            ("ask", ALWAYS_AVAILABLE),
+            ("invalid", ALWAYS_AVAILABLE),
+            ("not_found", ALWAYS_AVAILABLE | {name}),
+        ):
+            if unknown := _unknown(getattr(slot, part), allowed):
+                problems.append(f"slot {name!r}.{part}: unknown placeholders {unknown}")
+        if name in BACKEND_FIELDS and not slot.not_found:
+            problems.append(f"slot {name!r}: needs a not_found reply (the backend can refuse it)")
     return problems
 
 
@@ -183,10 +224,11 @@ def parse_knowledge_base(data: dict) -> KnowledgeBase:
     slots = {
         name: Slot(
             name,
-            re.compile(s.pattern),
+            re.compile(s.pattern, re.IGNORECASE),
             s.ask,
             s.invalid,
             re.compile(rf"(?:\b(?:{s.cue})\s*)?(?:{s.pattern})", re.IGNORECASE) if s.cue else None,
+            s.not_found,
         )
         for name, s in parsed.slots.items()
     }
@@ -198,6 +240,8 @@ def parse_knowledge_base(data: dict) -> KnowledgeBase:
             reply=i.reply,
             slot=i.slot,
             handoff=i.handoff,
+            negation_terms=tuple(i.negation_terms),
+            confirm=i.confirm,
         )
         for i in parsed.intents
     )
@@ -209,6 +253,7 @@ def parse_knowledge_base(data: dict) -> KnowledgeBase:
         unsupported_reply=parsed.replies.unsupported,
         intents=intents,
         slots=slots,
+        declined_reply=parsed.replies.declined,
     )
 
 

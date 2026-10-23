@@ -14,8 +14,9 @@ from .knowledge import KnowledgeBase
 from .simulation import OUTCOMES, Conversation
 from .static import asset
 
-# Reference palette, categorical slots in fixed order (light mode).
-SERIES = ("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4")
+# Reference palette, categorical slots in fixed order (light mode); the last one, neutral grey,
+# is for "abandoned", which is neither a success nor a wrong answer.
+SERIES = ("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#8c96a3")
 
 INTENT_NAMES = {
     "en": {
@@ -57,18 +58,22 @@ TEXT = {
         "kicker": "Evaluation report",
         "sub": (
             "Demo case with fictional data. Seed {seed}, {conv} simulated conversations, "
-            "intent accuracy measured on {test} phrases never used in training."
+            "intent accuracy measured on {test} held-out phrases that repeat no training or dev "
+            "phrase."
         ),
         "k_resolved": "conversations resolved with the right answer",
         "k_resolved_d": "{n} of {total}, no human involved",
-        "k_accuracy": "intent accuracy on never-seen phrases",
+        "k_accuracy": "intent accuracy on held-out phrases",
         "k_accuracy_d": "{n} of {total} test phrases, macro F1 {f1}",
         "k_handoff": "handed to a human",
         "k_handoff_d": "{req} on request, {fail} after {max} failed turns",
         "k_oos": "off-topic messages rejected",
         "k_oos_d": "{n} of {total} instead of a wrong answer",
         "outcomes_t": "Outcome of the {total} simulated conversations",
-        "outcomes_s": "Resolved means the bot answered the customer's real question.",
+        "outcomes_s": (
+            "Resolved means the bot answered the customer's real question and gave no wrong "
+            "answer on the way."
+        ),
         "flow": [
             ("customer messages", "{messages}", "{per} per conversation"),
             ("order numbers asked", "{asked}", "{reasked} asked again after a wrong reply"),
@@ -84,7 +89,8 @@ TEXT = {
         "o_requested_handoff": "Handed off on request",
         "o_failure_handoff": "Handed off after failed turns",
         "o_unrequested_handoff": "Handed off without a request",
-        "o_misrouted": "Answered a different question",
+        "o_misrouted": "Wrong answer or wrong flow",
+        "o_abandoned": "Rejected, then the customer left",
         "intent": "Intent",
         "precision": "Precision",
         "recall": "Recall",
@@ -108,7 +114,7 @@ TEXT = {
             ("Training examples (knowledge base)", "{train}"),
             ("Dev split (threshold only)", "{dev_in} in scope, {dev_oos} off topic"),
             ("Test split (reported numbers)", "{test_in} in scope, {test_oos} off topic"),
-            ("Phrases shared between splits", "{overlap}"),
+            ("Leaked phrases (same words, or cosine of {leak} or more)", "{overlap}"),
             ("Customer messages simulated", "{messages}"),
             ("Messages queued for learning", "{queue}"),
             ("LLM calls in this run", "{llm}"),
@@ -116,11 +122,15 @@ TEXT = {
         "method": [
             "The classifier learns only from the knowledge base examples.",
             "The dev split chooses the confidence threshold; the test split was frozen "
-            "and committed before any evaluation code existed.",
+            "and committed before any evaluation code existed, and has only lost phrases since.",
+            "No test phrase is the same model input as a training or dev phrase: the same "
+            "words once stopwords are dropped, in any order, or a cosine of {leak} or more, "
+            "count as a leak and were removed.",
             "Simulated customers draw their messages from the test split and add typos, "
-            "filler words and order numbers at random, with a fixed seed.",
-            "A conversation counts as resolved only when the bot answered the main question; "
-            "a confident wrong answer is counted as a failure, not as a success.",
+            "filler words and order numbers at random, with a fixed seed. They rephrase once "
+            "when rejected and answer the cancellation question honestly.",
+            "A conversation counts as resolved only when the bot answered the main question and "
+            "gave no wrong answer; a wrong answer is a failure even if the right one came later.",
         ],
         "samples_t": "Sample conversations",
         "customer": "Customer",
@@ -137,18 +147,22 @@ TEXT = {
         "kicker": "Relatório de avaliação",
         "sub": (
             "Case demonstrativo com dados fictícios. Semente {seed}, {conv} conversas simuladas, "
-            "acerto de intenção medido em {test} frases que nunca entraram no treino."
+            "acerto de intenção medido em {test} frases de teste que não repetem nenhuma frase de "
+            "treino ou de desenvolvimento."
         ),
         "k_resolved": "das conversas resolvidas com a resposta certa",
         "k_resolved_d": "{n} de {total}, sem atendente",
-        "k_accuracy": "de acerto de intenção em frases nunca vistas",
+        "k_accuracy": "de acerto de intenção nas frases de teste",
         "k_accuracy_d": "{n} de {total} frases de teste, F1 macro {f1}",
         "k_handoff": "transferidas para um atendente",
         "k_handoff_d": "{req} a pedido, {fail} depois de {max} falhas seguidas",
         "k_oos": "das mensagens fora do assunto recusadas",
         "k_oos_d": "{n} de {total}, em vez de uma resposta errada",
         "outcomes_t": "Resultado das {total} conversas simuladas",
-        "outcomes_s": "Resolvida significa que o robô respondeu a dúvida real do cliente.",
+        "outcomes_s": (
+            "Resolvida significa que o robô respondeu a dúvida real do cliente sem dar nenhuma "
+            "resposta errada no caminho."
+        ),
         "flow": [
             ("mensagens de clientes", "{messages}", "{per} por conversa"),
             (
@@ -172,7 +186,8 @@ TEXT = {
         "o_requested_handoff": "Transferida a pedido",
         "o_failure_handoff": "Transferida depois de falhas",
         "o_unrequested_handoff": "Transferida sem pedido",
-        "o_misrouted": "Respondeu outra dúvida",
+        "o_misrouted": "Resposta ou fluxo errado",
+        "o_abandoned": "Recusada, e o cliente desistiu",
         "intent": "Intenção",
         "precision": "Precisão",
         "recall": "Revocação",
@@ -196,7 +211,7 @@ TEXT = {
             ("Exemplos de treino (base de conhecimento)", "{train}"),
             ("Desenvolvimento (só o limiar)", "{dev_in} no escopo, {dev_oos} fora do assunto"),
             ("Teste (números do relatório)", "{test_in} no escopo, {test_oos} fora do assunto"),
-            ("Frases repetidas entre conjuntos", "{overlap}"),
+            ("Frases vazadas (mesmas palavras, ou cosseno de {leak} ou mais)", "{overlap}"),
             ("Mensagens de clientes simuladas", "{messages}"),
             ("Mensagens na fila de aprendizado", "{queue}"),
             ("Chamadas ao modelo de linguagem", "{llm}"),
@@ -204,11 +219,15 @@ TEXT = {
         "method": [
             "O classificador aprende só com os exemplos da base de conhecimento.",
             "O conjunto de desenvolvimento escolhe o limiar; o de teste foi congelado e versionado "
-            "antes de existir qualquer código de avaliação.",
+            "antes de existir qualquer código de avaliação, e desde então só perdeu frases.",
+            "Nenhuma frase de teste é a mesma entrada do modelo que uma frase de treino ou de "
+            "desenvolvimento: as mesmas palavras sem as stopwords, em qualquer ordem, ou um "
+            "cosseno de {leak} ou mais, contam como vazamento e foram retiradas.",
             "Os clientes simulados usam frases do conjunto de teste, com erros de digitação, "
-            "palavras soltas e números de pedido sorteados com semente fixa.",
-            "A conversa só conta como resolvida quando o robô respondeu a dúvida principal; "
-            "uma resposta errada com confiança conta como falha, não como sucesso.",
+            "palavras soltas e números de pedido sorteados com semente fixa. Eles reformulam uma "
+            "vez quando recusados e respondem com sinceridade à pergunta de cancelamento.",
+            "A conversa só conta como resolvida quando o robô respondeu a dúvida principal sem dar "
+            "resposta errada; uma resposta errada é falha mesmo que a certa venha depois.",
         ],
         "samples_t": "Exemplos de conversas simuladas",
         "customer": "Cliente",
@@ -523,10 +542,13 @@ def render(
         "messages": sim["customer_messages"],
         "queue": sim["learning_queue"],
         "llm": sim["llm_calls"],
+        "leak": fmt_num(metrics["config"]["leakage_cosine"], lang),
     }
-    data_rows = [(label, value.format(**fields)) for label, value in t["data_rows"]]
+    data_rows = [
+        (label.format(**fields), value.format(**fields)) for label, value in t["data_rows"]
+    ]
     test_phrases = data["test_in_scope"] + data["test_out_of_scope"]
-    method = "".join(f"<li>{_e(m)}</li>" for m in t["method"])
+    method = "".join(f"<li>{_e(m.format(**fields))}</li>" for m in t["method"])
     details = f"""
 <h2>{_e(t["f1_t"])}</h2>
 {_table((t["intent"], t["precision"], t["recall"], "F1", t["support"]), per_intent_rows)}

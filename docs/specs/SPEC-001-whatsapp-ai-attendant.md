@@ -168,6 +168,14 @@ A WhatsApp Cloud API webhook that answers the most common questions of a fiction
 - Given the cards, every number in them is in `evidencia/metricas.json` and the style rules pass
 - Given the 4 PNG files under `vitrine/`, each one is 1600x900
 
+### CA-14: negation guard and cancellation confirmation (covers RQ-35, RQ-36)
+
+- Given "não preciso de atendente", the bot does not hand off and answers with the declined reply
+- Given "cadê meu pedido 482915?" and then "quero cancelar", the bot asks "Confirma o cancelamento do pedido 482915?" instead of cancelling
+- And "nao quero mais cancelar, pode enviar" declines: the order is not cancelled
+- Given "quero cancelar o pedido 731204" and then "sim", the cancellation is answered
+- Given a pending cancellation without a number, "não quero mais cancelar" drops the pending question without a failed turn
+
 ### CA-15: webhook hardening (covers RQ-1, RQ-3, RQ-7, RQ-22, RQ-33)
 
 - Given no app secret, `POST /webhook` answers 503 and `/health` reports `signature_check` false; with `allow_unsigned` it answers 200
@@ -183,6 +191,12 @@ A WhatsApp Cloud API webhook that answers the most common questions of a fiction
 - Given a message whose handling raises, the other message of the payload is answered, the event gets 500 and the message is not marked; the redelivery is handled
 - Given a message that fails `max_processing_attempts` times, it is dead-lettered and the event gets 200
 - Given the defaults, the LLM call has a 3 second timeout and 1 retry, and a timeout above 5 seconds or 2 retries is a configuration error
+
+### CA-17: topic switch with a number and order ownership (covers RQ-13, RQ-37)
+
+- Given a pending order status, "quero cancelar o pedido 123456" switches to the cancellation with that number
+- Given a pending order status, "é o 482915" answers the order status
+- Given an order looked up by one phone, another phone asking about it gets the `not_found` reply and a failed turn
 
 ## 5. Events and data
 
@@ -252,8 +266,10 @@ None. The piece runs on fictional data and the owner's standing order approves t
 | CA-11 | RQ-22 to RQ-25 | `tests/test_api.py::test_ca_11_*`, `tests/test_whatsapp.py::test_ca_11_*`, `tests/test_cli.py::test_ca_11_*` | passing |
 | CA-12 | RQ-26 to RQ-29 | `tests/test_evaluation.py::test_ca_12_*`, `tests/test_evidence.py::test_ca_12_*` | passing |
 | CA-13 | RQ-30, RQ-31, RQ-32 | `tests/test_api.py::test_ca_13_*`, `tests/test_cli.py::test_ca_13_*`, `tests/test_vitrine.py::test_ca_13_*` | passing |
+| CA-14 | RQ-35, RQ-36 | `tests/test_dialogue.py::test_ca_14_*`, `tests/test_nlu.py::test_ca_14_*` | passing |
 | CA-15 | RQ-1, RQ-3, RQ-7, RQ-22, RQ-33 | `tests/test_api.py::test_ca_15_*`, `tests/test_whatsapp.py::test_ca_15_*` | passing |
 | CA-16 | RQ-5, RQ-34 | `tests/test_api.py::test_ca_16_*`, `tests/test_providers.py::test_ca_16_*`, `tests/test_config.py::test_ca_16_*` | passing |
+| CA-17 | RQ-13, RQ-37 | `tests/test_dialogue.py::test_ca_17_*` | passing |
 
 ## 11. Amendments
 
@@ -271,7 +287,8 @@ The review blocked the first version. Every finding became a requirement change,
 | The body was read whole, with no limit, before the signature check | RQ-7 | RQ-33, CA-15 |
 | A message id was recorded before processing, so a failure lost the message | RQ-5 | CA-16, ADR-006 |
 | Rejected-then-abandoned conversations were labelled misrouted, and a wrong cancellation could count as resolved | RQ-29, CA-12 | |
-| A number in the reply skipped the topic switch | RQ-13 | Placeholders of slot questions were not validated, and slot patterns were case sensitive | RQ-20, CA-10 | |
+| A number in the reply skipped the topic switch | RQ-13 | CA-17 |
+| Placeholders of slot questions were not validated, and slot patterns were case sensitive | RQ-20, CA-10 | |
 | Malformed payload parts and a non-ASCII signature raised 500 | RQ-3, RQ-7 | CA-15 |
 | The order lookup ignored who was asking | | RQ-37, CA-17 |
 | The demo console could call the LLM on every page view, re-ran the scenarios per request and could be served on any interface | RQ-30, CA-13 | |

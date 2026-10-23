@@ -1,6 +1,8 @@
 # Dev split: paraphrases used ONLY to choose the confidence threshold and to guide edits of the
 # knowledge base. Never used to report results. Written as customers type (no accents,
-# abbreviations, small typos). No phrase may repeat a training example or a test phrase.
+# abbreviations, small typos). No phrase may be the same model input as a training example:
+# the same words once stopwords are dropped, in any order, or a TF-IDF cosine of 0.95 or more
+# (ADR-005). Two phrases were removed by that rule on 2026-10-23.
 
 [phrases]
 greeting = [
@@ -14,7 +16,6 @@ greeting = [
 ]
 order_status = [
     "meu pedido nao chegou ainda",
-    "qual a situação do meu pedido",
     "cade minha compra",
     "quero rastrear a entrega",
     "o pedido ja foi enviado?",
@@ -67,7 +68,6 @@ business_hours = [
     "horário do suporte",
 ]
 human_agent = [
-    "quero falar com atendente",
     "me passa pra uma pessoa",
     "nao quero robo",
     "tem alguem pra me atender?",

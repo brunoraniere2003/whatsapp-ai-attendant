@@ -1,7 +1,9 @@
 # Test split: frozen before the first evaluation run. Used ONLY to report results and to drive the
 # conversation simulation. Never used to choose the threshold or to edit the knowledge base.
-# Written as customers type (no accents, abbreviations, small typos). No phrase may repeat a
-# training example or a dev phrase.
+# Written as customers type (no accents, abbreviations, small typos). No phrase may be the same
+# model input as a training example or a dev phrase: the same words once stopwords are dropped,
+# in any order, or a TF-IDF cosine of 0.95 or more (ADR-005). Twelve phrases were removed by
+# that rule on 2026-10-23, without looking at the model's answers; none was added or reworded.
 
 [phrases]
 greeting = [
@@ -12,14 +14,11 @@ greeting = [
     "e ai, tudo bom?",
     "olá, tem alguém aí?",
     "boa tarde, preciso de uma ajuda",
-    "oi oi",
     "bom dia, tudo bem com vocês?",
     "opa, boa noite",
     "oi, bom dia",
 ]
 order_status = [
-    "meu pedido ainda nao chegou",
-    "qual o status do meu pedido",
     "cadê o meu pedido?",
     "quando a encomenda chega",
     "quero acompanhar a entrega",
@@ -54,7 +53,6 @@ payment_status = [
     "fiz o pix agora, ja confirmou?",
     "o pagamento foi confirmado?",
     "paguei o boleto sexta feira",
-    "meu pagamento caiu?",
     "já paguei, podem verificar",
     "o cartão foi aprovado?",
     "o pedido diz aguardando pagamento mas eu paguei",
@@ -76,32 +74,26 @@ return_exchange = [
     "posso trocar por outra cor?",
     "o produto é diferente da foto",
     "prazo para trocar",
-    "quero solicitar a devolução",
     "veio faltando uma peça",
     "o celular parou de funcionar",
     "quero fazer a troca do produto",
 ]
 cancel_order = [
-    "quero cancelar o pedido",
     "pode cancelar minha compra?",
     "desisti da compra",
     "cancelamento por favor",
     "comprei duas vezes sem querer, cancela uma",
     "como cancelo meu pedido",
-    "quero cancelar antes de enviar",
     "não quero mais esse pedido",
     "cancela tudo",
     "preciso cancelar a compra de hoje",
     "quero o estorno, vou cancelar",
     "da pra cancelar ainda?",
-    "cancelar compra",
     "mudei de ideia, cancela o pedido",
 ]
 business_hours = [
     "qual horário vocês atendem?",
-    "abrem sábado?",
     "que horas o atendimento fecha",
-    "horário de atendimento por favor",
     "vocês trabalham domingo?",
     "até que horas posso chamar?",
     "atendem em feriado?",
@@ -124,7 +116,6 @@ human_agent = [
     "transfere para o suporte humano",
     "quero falar com o gerente",
     "robô não resolve, quero uma pessoa",
-    "atendente por favor",
     "falar com alguém",
     "me coloca com um atendente",
     "quero falar com o setor responsável",
@@ -132,7 +123,6 @@ human_agent = [
 goodbye = [
     "obrigadão",
     "ok, obrigada pela ajuda",
-    "tchau tchau",
     "era só isso mesmo, obrigado",
     "muito obrigada",
     "show, valeu",

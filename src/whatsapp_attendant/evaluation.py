@@ -2,6 +2,10 @@
 
 Metrics treat "out of scope" as a class of its own: an out-of-scope phrase is correct only when
 the engine rejects it, and an in-scope phrase that is rejected counts as a miss.
+
+Leakage is measured on what the model sees (ADR-005): two phrases are the same input when their
+words, without stopwords, form the same set (order and repetition do not count), or when their
+TF-IDF cosine reaches NEAR_DUPLICATE.
 """
 
 from __future__ import annotations
@@ -12,9 +16,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from .knowledge import NOT_UNDERSTOOD, KnowledgeBase, bundled_text
-from .nlu import Prediction, TfidfClassifier, normalize
+from .nlu import STOPWORDS, Prediction, TfidfClassifier, normalize
 
 OUT_OF_SCOPE = "out_of_scope"
+NEAR_DUPLICATE = 0.95  # cosine at or above which two phrases are the same model input
 THRESHOLD_GRID = tuple(round(0.10 + 0.02 * i, 2) for i in range(26))  # 0.10 to 0.60
 
 
@@ -46,7 +51,10 @@ def parse_split(name: str, data: dict, kb: KnowledgeBase) -> Split:
     unknown = set(phrases) - set(kb.intent_names) - {OUT_OF_SCOPE}
     if unknown:
         raise DatasetError(f"{name}: unknown intents {sorted(unknown)}")
-    clean = {k: tuple(str(t) for t in v if str(t).strip()) for k, v in phrases.items()}
+    for intent, texts in phrases.items():
+        if not isinstance(texts, list) or not all(isinstance(t, str) for t in texts):
+            raise DatasetError(f"{name}: {intent} must be a list of strings")
+    clean = {k: tuple(t for t in v if t.strip()) for k, v in phrases.items()}
     return Split(name, clean)
 
 
@@ -54,16 +62,57 @@ def load_split(name: str, kb: KnowledgeBase) -> Split:
     return parse_split(name, tomllib.loads(bundled_text(f"eval/{name}.toml")), kb)
 
 
-def overlaps(kb: KnowledgeBase, *splits: Split) -> list[str]:
-    """Normalized phrases that appear in more than one of: training examples and the splits."""
-    owners: dict[str, set[str]] = {}
-    for text, _ in kb.labeled_examples():
-        owners.setdefault(normalize(text), set()).add("train")
+def fingerprint(text: str) -> frozenset[str]:
+    """The words the model keeps, as a set: order and repetition do not change its input."""
+    return frozenset(w for w in normalize(text).split() if w not in STOPWORDS)
+
+
+@dataclass(frozen=True)
+class Leak:
+    split: str
+    text: str
+    other: str  # "train" or the name of an earlier split
+    other_text: str
+    reason: str  # "same words" or "cosine 0.97"
+
+    def __str__(self) -> str:
+        return f"{self.split}: {self.text!r} ~ {self.other}: {self.other_text!r} ({self.reason})"
+
+
+def find_leaks(
+    kb: KnowledgeBase,
+    *splits: Split,
+    limit: float = NEAR_DUPLICATE,
+    char_weight: float = 0.5,
+) -> list[Leak]:
+    """Phrases of each split that are the same model input as a training example or a phrase
+    of an earlier split (dev before test). Each leaking phrase is reported once."""
+    model = TfidfClassifier(kb.labeled_examples(), char_weight=char_weight)
+
+    def entry(name: str, text: str) -> tuple[str, str, frozenset[str], dict[str, float]]:
+        return name, text, fingerprint(text), model.vector(text)
+
+    earlier = [entry("train", text) for text, _ in kb.labeled_examples()]
+    leaks: list[Leak] = []
     for split in splits:
-        for texts in split.phrases.values():
-            for text in texts:
-                owners.setdefault(normalize(text), set()).add(split.name)
-    return sorted(k for k, v in owners.items() if len(v) > 1)
+        current = [entry(split.name, t) for texts in split.phrases.values() for t in texts]
+        for name, text, words, vec in current:
+            for other, other_text, other_words, other_vec in earlier:
+                if words and words == other_words:
+                    reason = "same words"
+                elif (sim := model.cosine(vec, other_vec)) >= limit:
+                    reason = f"cosine {sim:.2f}"
+                else:
+                    continue
+                leaks.append(Leak(name, text, other, other_text, reason))
+                break
+        earlier += current
+    return leaks
+
+
+def overlaps(kb: KnowledgeBase, *splits: Split, char_weight: float = 0.5) -> list[str]:
+    """Readable list of the leaks; empty when the splits are clean (RQ-26)."""
+    return [str(leak) for leak in find_leaks(kb, *splits, char_weight=char_weight)]
 
 
 def _ratio(num: int, den: int) -> float:

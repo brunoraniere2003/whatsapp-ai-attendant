@@ -1,7 +1,7 @@
 import pytest
 
 from whatsapp_attendant.knowledge import NOT_UNDERSTOOD
-from whatsapp_attendant.nlu import TfidfClassifier, features, normalize
+from whatsapp_attendant.nlu import TfidfClassifier, features, negated_words, normalize, yes_or_no
 from whatsapp_attendant.providers import LocalProvider
 
 
@@ -46,3 +46,45 @@ def test_scores_are_sorted_and_runner_up_is_reported(kb):
 def test_classifier_needs_examples():
     with pytest.raises(ValueError):
         TfidfClassifier([])
+
+
+@pytest.mark.parametrize(
+    ("text", "negated"),
+    [
+        ("nao quero mais cancelar, pode enviar", {"cancelar"}),
+        ("não preciso de atendente", {"atendente"}),
+        ("não quero mais o produto, quero cancelar", {"produto"}),
+        ("não quero falar com robô", {"robo"}),
+        ("não quero falar com uma pessoa", {"pessoa"}),
+        ("nao gostei quero cancelar", {"gostei"}),
+        ("quero cancelar não", {"cancelar"}),
+        ("robô não resolve, quero uma pessoa", {"resolve"}),
+        ("não sei o número mas quero cancelar", {"sei"}),
+        ("n quero mais cancelar", {"cancelar"}),
+        ("cancela meu pedido", set()),
+        ("não", set()),
+    ],
+)
+def test_ca_14_negation_reaches_the_first_content_word_of_its_clause(text, negated):
+    assert negated_words(text) == negated
+
+
+@pytest.mark.parametrize(
+    ("text", "answer"),
+    [
+        ("sim", True),
+        ("s", True),
+        ("isso, pode cancelar", True),
+        ("quero cancelar sim", True),
+        ("Cancela!", True),
+        ("não", False),
+        ("nao quero mais cancelar, pode enviar", False),
+        ("n", False),
+        ("nem pensar", False),
+        ("pode enviar", None),
+        ("sim, não", None),
+        ("talvez", None),
+    ],
+)
+def test_ca_14_yes_or_no_reads_the_answer_to_a_confirmation(text, answer):
+    assert yes_or_no(text, ("cancel", "estorn")) is answer

@@ -13,7 +13,7 @@ All indicators come from the service's own data: `/health`, `/metrics` and the J
 | Delivery | `1 - send_failures / replied` | 99% | 1 failed reply in 100 |
 | Understanding | `1 - not_understood / received` | 85% | 15 messages in 100 |
 
-When a budget is spent, knowledge base and feature changes stop until the cause is fixed and recorded in the matching runbook. The understanding SLO is the business signal: the evaluation measured 86.8% on held-out phrases, so a real traffic value far below that means the knowledge base is missing a topic.
+When a budget is spent, knowledge base and feature changes stop until the cause is fixed and recorded in the matching runbook. The understanding SLO is the business signal: the evaluation measured 85.3% on held-out phrases, so a real traffic value far below that means the knowledge base is missing a topic.
 
 ## RACI
 
@@ -32,7 +32,7 @@ R: responsible, A: accountable, C: consulted, I: informed.
 
 | Id | Risk | Likelihood | Impact | Mitigation | Owner |
 |---|---|---|---|---|---|
-| R1 | Confident wrong answer (21% of simulated conversations) | high | medium | handoff on request, weekly learning queue review, next experiment with a confirmation question | developer |
+| R1 | Wrong answer (34 of 300 simulated conversations) | high | medium | yes or no confirmation before a cancellation, negation guard, handoff on request, weekly learning queue review, next experiment with the same question for other low-confidence answers | developer |
 | R2 | Restart loses sessions and processed ids, a redelivered event gets a second reply | medium | low | single replica; Redis in production (ADR-003) | operator |
 | R3 | Access token expires and replies stop | medium | high | system user token, `send.failed` alert, runbook send-failures | operator |
 | R4 | Forged webhook calls | medium | medium | HMAC check with the app secret, 503 without it, 413 above 1 MiB, `invalid_signatures` alert | operator |
@@ -44,7 +44,7 @@ R: responsible, A: accountable, C: consulted, I: informed.
 ## Roadmap
 
 1. Measure on real traffic: export a week of anonymized messages and rebuild the dev and test splits from them.
-2. Confirmation question for predictions just above the threshold, compared with this baseline on the same seed.
+2. The yes or no question that already guards cancellations, extended to predictions just above the threshold, compared with this baseline on the same seed.
 3. Redis for sessions, idempotency and the learning queue, with migrations and backups.
 4. Real order backend (store ERP) behind `OrderBackend`.
 5. Template messages for replies outside the 24-hour window.
