@@ -8,13 +8,14 @@
   the conversation console and the evaluation dashboard.
 - evidencia/report.pdf, evidencia/relatorio.pdf and evidencia/previa.png from the HTML reports.
 
-Chromium path: $CHROME, or the default path below. Fails if any image is not 1600x900.
+Chromium path: $CHROME_PATH, or the default path below. Fails if any image is not 1600x900.
 """
 
 from __future__ import annotations
 
 import html
 import os
+import secrets
 import socket
 import struct
 import subprocess
@@ -27,7 +28,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "vitrine"
 EVIDENCE = ROOT / "evidencia"
-CHROME = os.environ.get("CHROME", "/usr/bin/chromium")
+DEFAULT_CHROME = "/usr/bin/chromium"
+CHROME = os.environ.get("CHROME_PATH") or DEFAULT_CHROME
 SIZE = (1600, 900)
 
 COVERS = {
@@ -117,7 +119,7 @@ def screens(tmp: Path) -> None:
     import uvicorn
 
     from whatsapp_attendant.api import create_app
-    from whatsapp_attendant.config import DemoSettings, LoggingSettings, Settings
+    from whatsapp_attendant.config import DemoSettings, LoggingSettings, Secrets, Settings
     from whatsapp_attendant.logs import get_logger
 
     settings = Settings(
@@ -126,9 +128,9 @@ def screens(tmp: Path) -> None:
     )
     port = free_port()
     base = f"http://127.0.0.1:{port}"
-    server = uvicorn.Server(
-        uvicorn.Config(create_app(settings), host="127.0.0.1", port=port, log_level="warning")
-    )
+    # A throwaway app secret: the webhook is not used, but /health must be green (fail closed).
+    app = create_app(settings, Secrets(app_secret=secrets.token_hex(16)))
+    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning"))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
     try:
@@ -160,7 +162,7 @@ def evidence_files() -> None:
 
 def main() -> int:
     if not Path(CHROME).is_file():
-        print(f"Chromium not found: {CHROME} (set $CHROME)")
+        print(f"Chromium not found: {CHROME} (set $CHROME_PATH)")
         return 2
     with tempfile.TemporaryDirectory() as folder:
         tmp = Path(folder)

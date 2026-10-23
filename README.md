@@ -30,6 +30,7 @@ Requirements: Python 3.13 and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync                                             # creates .venv with the dev tools
+uv sync --extra llm                                 # same, plus the optional Claude layer
 uv run pytest --cov                                 # 250+ tests, no network, coverage floor 90%
 uv run python -m whatsapp_attendant evidence        # rebuilds evidencia/ (seed 42, 300 conversations)
 uv run python -m whatsapp_attendant serve --demo    # http://127.0.0.1:8000/console and /dashboard
@@ -59,7 +60,7 @@ Tunables live in a TOML file; [config.example.toml](config.example.toml) documen
 | `WA_VERIFY_TOKEN` | webhook verification | verification always answers 403 |
 | `WA_APP_SECRET` | HMAC check of every event | the webhook answers 503 and `/health` fails; `whatsapp.allow_unsigned = true` accepts unsigned events, for local tests only |
 | `WA_ACCESS_TOKEN`, `WA_PHONE_NUMBER_ID` | sending through the Graph API | replies are recorded in memory, nothing is sent; the token without `WA_APP_SECRET` stops the service at startup |
-| `ANTHROPIC_API_KEY` | optional LLM second layer (`pip install .[llm]`) | local engine only, no outbound call |
+| `ANTHROPIC_API_KEY` | optional LLM second layer (install it with `uv sync --extra llm`) | local engine only, no outbound call |
 
 ## Architecture
 

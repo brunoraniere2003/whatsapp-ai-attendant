@@ -7,8 +7,12 @@ license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Bruno Raniere" }]
 requires-python = ">=3.13"
+# Only what the service imports: the web framework, its server, the settings models and the
+# Graph API client. fastapi[standard] would add a CLI, templates and form parsing it never uses.
 dependencies = [
-    "fastapi[standard]>=0.115",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "pydantic>=2.9",
     "httpx>=0.28",
 ]
 
