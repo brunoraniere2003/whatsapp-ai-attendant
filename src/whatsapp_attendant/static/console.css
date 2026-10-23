@@ -44,7 +44,8 @@ td{padding:6px 16px;border-bottom:1px solid #f2f3f0}
 .act{font-size:11.5px;border-radius:9px;padding:1px 8px;background:#eef1f4;color:#36424a}
 .act-answer{background:#e2f4ea;color:#0f6b3f}.act-handoff{background:#fdeee6;color:#9a3f12}
 .act-not_understood,.act-reask_slot{background:#fff3d6;color:#7a5a00}
-.act-ask_slot{background:#e4eefc;color:#1c4f95}
+.act-ask_slot,.act-confirm{background:#e4eefc;color:#1c4f95}
+.act-declined{background:#eef0f3;color:#3b4652}
 .state{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 16px 12px}
 .state div{background:#f6f7f5;border-radius:8px;padding:8px 10px}
 .state span{display:block;font-size:11.5px;color:#667781}.state b{font-size:13.5px}

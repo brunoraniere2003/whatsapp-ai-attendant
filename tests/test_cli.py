@@ -7,6 +7,8 @@ import pytest
 
 from whatsapp_attendant import cli
 
+ALL_INTERFACES = "0.0.0.0"  # noqa: S104 - the host the demo must refuse
+
 
 def run(capsys, *argv: str) -> tuple[int, str]:
     code = cli.main(list(argv))
@@ -76,3 +78,28 @@ def test_module_entry_point(monkeypatch, capsys):
     with pytest.raises(SystemExit) as info:
         runpy.run_module("whatsapp_attendant", run_name="__main__")
     assert info.value.code == 0
+
+
+@pytest.mark.parametrize(
+    ("host", "extra", "code"),
+    [
+        (ALL_INTERFACES, [], 2),
+        ("192.168.0.10", [], 2),
+        (ALL_INTERFACES, ["--allow-remote-demo"], 0),
+        ("localhost", [], 0),
+        ("::1", [], 0),
+        ("127.0.0.2", [], 0),
+    ],
+)
+def test_ca_13_serve_demo_stays_on_loopback_unless_allowed(
+    monkeypatch, tmp_path, capsys, host, extra, code
+):
+    started = []
+    monkeypatch.setattr("uvicorn.run", lambda app, host, port, log_level: started.append(host))
+    config = tmp_path / "c.toml"
+    config.write_text(f"[logging]\nfile = '{tmp_path / 'a.log'}'\n", encoding="utf-8")
+    argv = ["serve", "--demo", "--host", host, "--config", str(config), *extra]
+    assert cli.main(argv) == code
+    assert started == ([host] if code == 0 else [])
+    if code:
+        assert "--allow-remote-demo" in capsys.readouterr().err

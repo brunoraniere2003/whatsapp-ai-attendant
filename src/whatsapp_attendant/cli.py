@@ -1,7 +1,8 @@
 """Command line: evidence, serve, health and check-config.
 
     python -m whatsapp_attendant evidence [--seed 42] [--conversations 300] [--out evidencia]
-    python -m whatsapp_attendant serve [--host 127.0.0.1] [--port 8000] [--demo] [--config FILE]
+    python -m whatsapp_attendant serve [--host 127.0.0.1] [--port 8000] [--demo]
+        [--allow-remote-demo] [--config FILE]
     python -m whatsapp_attendant health [--url http://127.0.0.1:8000] [--config FILE]
     python -m whatsapp_attendant check-config FILE
 
@@ -11,6 +12,7 @@ Exit codes: 0 success, 1 check failed, 2 usage or configuration error.
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import json
 import sys
 from collections.abc import Sequence
@@ -43,11 +45,27 @@ def _evidence(args: argparse.Namespace) -> int:
     return 0
 
 
+def is_loopback(host: str) -> bool:
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
 def _serve(args: argparse.Namespace) -> int:
     import uvicorn
 
     from .api import create_app
 
+    if args.demo and not args.allow_remote_demo and not is_loopback(args.host):
+        error = (
+            f"the demo UI answers anyone who reaches it; refusing --host {args.host}. Use a "
+            "loopback address, or pass --allow-remote-demo on purpose (RQ-30)"
+        )
+        print(json.dumps({"status": "error", "error": error}), file=sys.stderr)
+        return 2
     settings = load_settings(args.config)
     if args.demo:
         settings = settings.model_copy(
@@ -105,6 +123,11 @@ def parser() -> argparse.ArgumentParser:
     sv.add_argument("--host", default="127.0.0.1")
     sv.add_argument("--port", type=int, default=8000)
     sv.add_argument("--demo", action="store_true", help="enable /console and /dashboard")
+    sv.add_argument(
+        "--allow-remote-demo",
+        action="store_true",
+        help="serve the demo UI on a host that is not a loopback address",
+    )
     sv.add_argument("--config", default=None)
     sv.set_defaults(func=_serve)
     hc = sub.add_parser("health", help="exit 0 when healthy, 1 otherwise")

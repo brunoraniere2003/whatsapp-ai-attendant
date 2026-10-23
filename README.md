@@ -35,7 +35,7 @@ uv run python -m whatsapp_attendant evidence        # rebuilds evidencia/ (seed 
 uv run python -m whatsapp_attendant serve --demo    # http://127.0.0.1:8000/console and /dashboard
 ```
 
-On Windows without uv on the path, the same commands run with `.venv\Scripts\python -m ...`. `python tasks.py check` runs lint, format check, tests with coverage and the evidence check in one go.
+On Windows without uv on the path, the same commands run with `.venv\Scripts\python -m ...`. `python tasks.py check` runs lint, format check, tests with coverage and the evidence check in one go. The demo UI answers anyone who can reach it, so `serve --demo` refuses a host that is not a loopback address unless `--allow-remote-demo` is given; its console runs the local engine only, never the LLM layer, and `/docs` exists only in demo mode.
 
 Try the webhook locally with a Cloud API payload:
 

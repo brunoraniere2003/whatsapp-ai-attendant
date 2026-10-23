@@ -1,8 +1,12 @@
 """Demo UI (disabled by default): a conversation console and the evaluation dashboard (RQ-30).
 
-The console runs scripted conversations live through the same Attendant the webhook uses, in a
-sandbox that never touches webhook sessions or sends anything. Its message box talks to the
+The console runs scripted conversations through the same Attendant rules the webhook uses, in a
+sandbox that never touches webhook sessions or sends anything. Its message box talks to another
 sandbox through `POST /console/api/message`.
+
+The sandboxes use the local engine only, never the LLM layer: the demo answers anyone who can
+reach it, and a page view must not cost an API call (RQ-30). The scenarios run once, when the
+demo is mounted, and each page is rendered once.
 """
 
 from __future__ import annotations
@@ -19,6 +23,7 @@ from . import evidence, report
 from .dialogue import Action, Attendant, Session, Turn
 from .knowledge import UNSUPPORTED
 from .logs import mask_phone
+from .providers import LLMFallbackProvider, LocalProvider
 from .static import asset
 
 if TYPE_CHECKING:
@@ -59,6 +64,12 @@ SCENARIOS = (
         "Topic switch to a person",
         "Leaves the pending question and hands off on request",
         ("quero cancelar minha compra", "na verdade quero falar com uma pessoa", "alô?"),
+    ),
+    Scenario(
+        "cancel-confirmation",
+        "Cancellation needs a yes",
+        "Reuses the number, asks to confirm, keeps the order on a no",
+        ("cadê meu pedido 482915?", "quero cancelar", "não, pode enviar"),
     ),
     Scenario(
         "two-failures",
@@ -103,7 +114,20 @@ def _turn_json(turn: Turn) -> dict:
     }
 
 
-def run_scenarios(attendant: Attendant) -> list[tuple[Scenario, str, list[Turn]]]:
+Results = list[tuple[Scenario, str, list[Turn]]]
+
+
+def sandbox(rt: Runtime) -> Attendant:
+    """An attendant with the runtime's rules and knowledge base and the local engine only."""
+    return Attendant(
+        rt.kb,
+        LocalProvider(rt.kb, rt.settings.engine),
+        rt.settings.dialogue,
+        switch_threshold=rt.settings.engine.switch_threshold,
+    )
+
+
+def run_scenarios(attendant: Attendant) -> Results:
     results = []
     for index, scenario in enumerate(SCENARIOS, start=1):
         phone = _phone(index)
@@ -174,14 +198,8 @@ def _kb_rows(rt: Runtime) -> str:
     return "".join(chips)
 
 
-def render_console(rt: Runtime, selected: str) -> str:
-    sandbox = Attendant(
-        rt.kb,
-        rt.provider,
-        rt.settings.dialogue,
-        switch_threshold=rt.settings.engine.switch_threshold,
-    )
-    results = run_scenarios(sandbox)
+def render_console(rt: Runtime, selected: str, results: Results, scenarios: Attendant) -> str:
+    """The console page for `selected`; `scenarios` is the sandbox that ran `results`."""
     keys = [s.key for s, _, _ in results]
     current = selected if selected in keys else keys[0]
     links = []
@@ -194,17 +212,18 @@ def render_console(rt: Runtime, selected: str) -> str:
             f'<span class="tag {cls}">{_e(label)}</span></a>'
         )
     scenario, phone, turns = next(r for r in results if r[0].key == current)
-    session = sandbox.session(phone)
+    session = scenarios.session(phone)
     queue = (
         "".join(
             f"<li>{_e(item.text)}<small>{_e(item.phone)} · best guess {_e(item.best_guess)} "
             f"{item.confidence:.2f}</small></li>"
-            for item in sandbox.learning_queue
+            for item in scenarios.learning_queue
         )
         or "<li>empty</li>"
     )
     examples = len(rt.kb.labeled_examples())
-    llm = "on" if rt.provider.__class__.__name__ == "LLMFallbackProvider" else "off"
+    webhook_llm = isinstance(rt.provider, LLMFallbackProvider)
+    llm = "on for the webhook, off in this console" if webhook_llm else "off"
     threshold = rt.settings.engine.confidence_threshold
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -217,8 +236,9 @@ def render_console(rt: Runtime, selected: str) -> str:
 <span class="chip">Fictional data</span></div></div>
 <div class="wrap">
 <div class="panel scen"><h2>Scripted scenarios</h2>{"".join(links)}
-<p class="note">Each scenario runs live through the same Attendant the webhook uses, in a sandbox
-that sends nothing. Type in the box to start your own conversation.</p></div>
+<p class="note">Each scenario runs through the same Attendant rules the webhook uses, with the
+local engine, in a sandbox that sends nothing. Type in the box to start your own conversation.</p>
+</div>
 <div class="panel chat"><div class="head"><div class="avatar">LE</div><div>
 <b>{_e(rt.kb.store_name)} · {_e(scenario.title)}</b>
 <small>simulated customer {_e(mask_phone(phone))} · sandbox, nothing is sent</small></div></div>
@@ -239,28 +259,33 @@ placeholder="Type a customer message in Portuguese, for example: quero a segunda
 
 
 def mount(app: FastAPI, rt: Runtime) -> None:
-    sandbox = Attendant(
-        rt.kb,
-        rt.provider,
-        rt.settings.dialogue,
-        switch_threshold=rt.settings.engine.switch_threshold,
-    )
+    scenarios = sandbox(rt)
+    results = run_scenarios(scenarios)  # once per process
+    keys = [s.key for s, _, _ in results]
+    pages: dict[str, str] = {}
+    chat = sandbox(rt)
     cache: dict[str, dict] = {}
 
     @app.get("/console", response_class=HTMLResponse, include_in_schema=False)
     def console(scenario: str = "") -> HTMLResponse:
-        return HTMLResponse(render_console(rt, scenario))
+        key = scenario if scenario in keys else keys[0]
+        if key not in pages:
+            pages[key] = render_console(rt, key, results, scenarios)
+        return HTMLResponse(pages[key])
 
     @app.post("/console/api/message", include_in_schema=False)
     def console_message(body: ConsoleMessage) -> dict:
-        return _turn_json(sandbox.handle(f"demo-{body.session}", body.text))
+        return _turn_json(chat.handle(f"demo-{body.session}", body.text))
 
     @app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
     def dashboard(lang: str = "en", view: str = "overview") -> HTMLResponse:
         if lang not in report.TEXT or view not in ("overview", "full"):
             raise HTTPException(status_code=404, detail="unknown language or view")
         if "metrics" not in cache:
-            cache["metrics"] = evidence.build(settings=rt.settings)
+            try:
+                cache["metrics"] = evidence.build(settings=rt.settings)
+            except ValueError as exc:  # e.g. a threshold that is not the dev choice (RQ-27)
+                raise HTTPException(status_code=503, detail=str(exc)) from exc
         metrics = cache["metrics"]
         page = report.render(
             evidence.public(metrics), metrics["_conversations"], rt.kb, lang, view, nav=True

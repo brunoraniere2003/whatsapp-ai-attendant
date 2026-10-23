@@ -380,3 +380,40 @@ def test_ca_16_a_message_that_keeps_failing_is_dead_lettered(settings, kb):
     assert sender.sent == []
     dead = [e for e in read_log(settings) if e["event"] == "message.failed" and e["dead_letter"]]
     assert len(dead) == 1
+
+
+def test_ca_13_the_console_never_calls_the_llm_and_runs_the_scenarios_once(
+    settings, kb, monkeypatch
+):
+    from conftest import FakeLLMClient, FakeMessages
+
+    from whatsapp_attendant import demo as demo_ui
+    from whatsapp_attendant.config import LLMSettings
+    from whatsapp_attendant.providers import LLMFallbackProvider
+
+    runs = []
+    real = demo_ui.run_scenarios
+    monkeypatch.setattr(demo_ui, "run_scenarios", lambda a: runs.append(1) or real(a))
+    messages = FakeMessages({"intent": "business_hours", "confidence": 0.99})
+    llm = LLMFallbackProvider(LocalProvider(kb), kb, LLMSettings(), FakeLLMClient(messages))
+    client, _ = make(settings.model_copy(update={"demo": DemoSettings(enabled=True)}), provider=llm)
+    for scenario in ("two-failures", "two-failures", "order-status", ""):
+        assert client.get("/console", params={"scenario": scenario}).status_code == 200
+    typed = client.post("/console/api/message", json={"session": "s", "text": "bicicleta?"})
+    assert typed.json()["intent"] == "not_understood"
+    assert messages.calls == [] and runs == [1]
+    assert "LLM layer: on for the webhook, off in this console" in client.get("/console").text
+
+
+def test_ca_13_the_dashboard_explains_a_configuration_it_cannot_evaluate(settings):
+    from whatsapp_attendant.config import EngineSettings
+
+    tuned = settings.model_copy(
+        update={
+            "demo": DemoSettings(enabled=True),
+            "engine": EngineSettings(confidence_threshold=0.5),
+        }
+    )
+    client, _ = make(tuned)
+    r = client.get("/dashboard")
+    assert r.status_code == 503 and "threshold" in r.json()["detail"]
