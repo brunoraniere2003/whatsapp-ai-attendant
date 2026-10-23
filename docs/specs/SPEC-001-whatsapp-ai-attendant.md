@@ -182,7 +182,7 @@ A WhatsApp Cloud API webhook that answers the most common questions of a fiction
 - Given an access token without an app secret, the app refuses to start
 - Given a non-ASCII signature header, the answer is 401; given a body above the limit, declared or streamed, the answer is 413
 - Given malformed parts in a payload or JSON nested too deep, the service answers 200 or 400, never 500
-- Given a realistic `wamid` that encodes 16505076520, neither the id nor the number appears in the log
+- Given a realistic `wamid` that encodes 16505550123, neither the id nor the number appears in the log
 - Given a `hub.challenge` that is not digits, verification answers 400
 
 ### CA-16: non-blocking handling and idempotency after success (covers RQ-5, RQ-34)

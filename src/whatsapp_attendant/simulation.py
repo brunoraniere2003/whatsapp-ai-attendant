@@ -106,7 +106,9 @@ def add_typo(text: str, rng: random.Random) -> str:
 
 
 def _phone(rng: random.Random) -> str:
-    return "55119" + "".join(rng.choice("0123456789") for _ in range(8))
+    """A number that cannot exist (a Brazilian subscriber number never starts with 0); 8 seeded
+    digits keep the customers of one run apart, since they share one attendant."""
+    return "55110" + "".join(rng.choice("0123456789") for _ in range(8))
 
 
 def is_wrong(turn: Turn, wanted: str) -> bool:

@@ -22,11 +22,11 @@ from whatsapp_attendant.whatsapp import (
     signature_for,
 )
 
-PHONE = "5511999990005"
+PHONE = "5511000000005"
 APP_SECRET = "app-secret"
-# A real-shaped Cloud API message id: the base64 part encodes the sender's phone, 16505076520.
-WAMID = "wamid.HBgLMTY1MDUwNzY1MjAVAgASGBQzQTRBNjU5OUFFRTAzODEwMTQ0RgA="
-WAMID_PHONE = "16505076520"
+# A real-shaped Cloud API message id: the base64 part encodes the sender's phone, 16505550123.
+WAMID = "wamid.HBgLMTY1MDU1NTAxMjMVAgASGBQzQTRBNjU5OUFFRTAzODEwMTQ0RgA="
+WAMID_PHONE = "16505550123"
 
 
 def make(settings, sender=None, provider=None, app_secret=APP_SECRET, **secrets):
@@ -357,7 +357,7 @@ class FlakyProvider:
 def test_ca_16_a_failed_message_is_not_marked_and_the_others_are_answered(settings, kb):
     provider = FlakyProvider(kb, failures=1)
     client, sender = make(settings, provider=provider)
-    payload = event(text("5511999990001", "wamid.a", "boom"), text(PHONE, "wamid.b", "bom dia"))
+    payload = event(text("5511000000001", "wamid.a", "boom"), text(PHONE, "wamid.b", "bom dia"))
     first = post(client, payload)
     assert first.status_code == 500 and [p for p, _ in sender.sent] == [PHONE]
     failed = [e for e in read_log(settings) if e["event"] == "message.failed"]

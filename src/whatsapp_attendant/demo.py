@@ -98,7 +98,8 @@ class ConsoleMessage(BaseModel):
 
 
 def _phone(index: int) -> str:
-    return f"551190000{index:04d}"
+    """A number that cannot exist: a Brazilian subscriber number never starts with 0."""
+    return f"55110{index:08d}"
 
 
 def _turn_json(turn: Turn) -> dict:

@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- Phone numbers in tests, the README and the demo and simulation generators are numbers that cannot exist (`55110…`: a Brazilian subscriber number never starts with 0). The test message id encodes the fictional `16505550123` and the demo-host test uses the documentation address `192.0.2.10`. Masked phones, `metricas.json`, the reports and the transcripts are byte-identical.
+
 ## [1.1.0] - 2026-10-23
 
 Fixes every finding of the independent review that blocked 1.0.0 (SPEC-001 amendment A-1). Version 1.0.0 was never deployed or published, so the stricter defaults below ship as a minor version instead of a major one.

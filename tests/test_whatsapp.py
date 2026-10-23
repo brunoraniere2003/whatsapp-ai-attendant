@@ -88,11 +88,11 @@ def _sender(responses: list, sleeps: list[float], **settings) -> tuple[CloudApiS
 def test_ca_11_transient_errors_are_retried_with_backoff():
     sleeps: list[float] = []
     sender, calls = _sender([httpx.Response(503), httpx.Response(503), httpx.Response(200)], sleeps)
-    sender.send_text("5511999990001", "olá")
+    sender.send_text("5511000000001", "olá")
     assert len(calls) == 3 and sleeps == [0.5, 1.0]
     assert calls[0].url.path == "/v23.0/999/messages"
     assert calls[0].headers["authorization"] == "Bearer token"
-    assert b'"to":"5511999990001"' in calls[0].content
+    assert b'"to":"5511000000001"' in calls[0].content
 
 
 def test_ca_11_client_errors_are_not_retried_and_are_logged(settings):
@@ -100,7 +100,7 @@ def test_ca_11_client_errors_are_not_retried_and_are_logged(settings):
     sleeps: list[float] = []
     sender, calls = _sender([httpx.Response(401)], sleeps)
     with pytest.raises(SendError) as info:
-        sender.send_text("5511999990001", "olá")
+        sender.send_text("5511000000001", "olá")
     assert info.value.status == 401 and len(calls) == 1 and sleeps == []
     failed = [e for e in read_log(settings) if e["event"] == "send.failed"]
     assert failed and failed[0]["retryable"] is False and failed[0]["phone"] == "5511*******01"

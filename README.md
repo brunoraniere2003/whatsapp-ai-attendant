@@ -44,7 +44,7 @@ Try the webhook locally with a Cloud API payload:
 export WA_VERIFY_TOKEN=change-me WA_APP_SECRET=dev-secret
 uv run python -m whatsapp_attendant serve
 curl "http://127.0.0.1:8000/webhook?hub.mode=subscribe&hub.verify_token=change-me&hub.challenge=42"
-body='{"entry":[{"changes":[{"value":{"messages":[{"from":"5511900000001","id":"wamid.1","type":"text","text":{"body":"cadê meu pedido 482915?"}}]}}]}]}'
+body='{"entry":[{"changes":[{"value":{"messages":[{"from":"5511000000001","id":"wamid.1","type":"text","text":{"body":"cadê meu pedido 482915?"}}]}}]}]}'
 sig=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$WA_APP_SECRET" | sed 's/^.* //')
 curl -X POST http://127.0.0.1:8000/webhook -H "content-type: application/json" -H "x-hub-signature-256: sha256=$sig" -d "$body"
 curl http://127.0.0.1:8000/metrics

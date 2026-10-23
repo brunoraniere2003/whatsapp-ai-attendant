@@ -7,7 +7,7 @@ from whatsapp_attendant.dialogue import Action, Attendant, HandoffReason
 from whatsapp_attendant.knowledge import NOT_UNDERSTOOD
 from whatsapp_attendant.providers import LocalProvider
 
-PHONE = "5511999990001"
+PHONE = "5511000000001"
 
 
 def test_ca_7_asks_for_the_order_number_reasks_and_answers(attendant, kb):
@@ -217,7 +217,7 @@ def test_ca_14_a_confident_new_topic_leaves_the_confirmation(attendant):
 
 def test_ca_14_negations_of_other_words_keep_the_intent(attendant):
     assert attendant.handle(PHONE, "não quero falar com robô").action is Action.HANDOFF
-    other = "5511999990002"
+    other = "5511000000002"
     t = attendant.handle(other, "nao recebi o produto quero cancelar")  # negates "recebi" only
     assert (t.intent, t.action) == ("cancel_order", Action.ASK_SLOT)
 
@@ -236,8 +236,8 @@ def test_ca_17_a_number_reply_answers_the_pending_question(attendant):
     attendant.handle(PHONE, "cadê meu pedido?")
     t = attendant.handle(PHONE, "é o 482915")
     assert (t.intent, t.action) == ("order_status", Action.ANSWER)
-    attendant.handle("5511999990003", "cadê meu pedido?")
-    greeting = attendant.handle("5511999990003", "oi, o número é 654321")
+    attendant.handle("5511000000003", "cadê meu pedido?")
+    greeting = attendant.handle("5511000000003", "oi, o número é 654321")
     assert (greeting.intent, greeting.action) == ("order_status", Action.ANSWER)
 
 
@@ -249,7 +249,7 @@ def test_ca_17_a_number_with_a_request_for_a_person_hands_off(attendant):
 
 def test_ca_17_an_order_of_another_phone_is_not_found(attendant, kb):
     assert attendant.handle(PHONE, "cadê meu pedido 111111?").action is Action.ANSWER
-    stranger = "5511999990009"
+    stranger = "5511000000009"
     t = attendant.handle(stranger, "cadê meu pedido 111111?")
     slot = kb.slots["order_number"]
     assert (t.action, t.reply) == (

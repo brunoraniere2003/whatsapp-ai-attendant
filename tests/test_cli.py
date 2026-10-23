@@ -84,7 +84,7 @@ def test_module_entry_point(monkeypatch, capsys):
     ("host", "extra", "code"),
     [
         (ALL_INTERFACES, [], 2),
-        ("192.168.0.10", [], 2),
+        ("192.0.2.10", [], 2),
         (ALL_INTERFACES, ["--allow-remote-demo"], 0),
         ("localhost", [], 0),
         ("::1", [], 0),
